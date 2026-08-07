@@ -1,0 +1,1430 @@
+// =============================================================================
+// SILVAPURE — Enterprise Wastewater Management Platform
+// Prisma Schema — Production-Ready v1.1
+// =============================================================================
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// =============================================================================
+// ENUMS — Identity & Access
+// =============================================================================
+
+enum UserStatus {
+  ACTIVE
+  INACTIVE
+  SUSPENDED
+}
+
+enum RoleCode {
+  ADMIN
+  PLANT_MANAGER
+  OPERATOR
+  ENVIRONMENTAL_OFFICER
+  VIEWER
+}
+
+enum NotificationType {
+  IN_APP
+  EMAIL
+  SMS
+  PUSH
+}
+
+// =============================================================================
+// ENUMS — Organization & Plant
+// =============================================================================
+
+enum OrganizationStatus {
+  ACTIVE
+  INACTIVE
+}
+
+enum PlantType {
+  INDUSTRIAL
+  MUNICIPAL
+}
+
+enum PlantStatus {
+  ACTIVE
+  MAINTENANCE
+  INACTIVE
+}
+
+enum TreatmentPlantType {
+  STP
+  ETP
+  CETP
+}
+
+// =============================================================================
+// ENUMS — Device & Protocol
+// =============================================================================
+
+enum ControllerStatus {
+  ACTIVE
+  INACTIVE
+  MAINTENANCE
+}
+
+enum DeviceStatus {
+  ONLINE
+  OFFLINE
+  MAINTENANCE
+  FAULT
+}
+
+enum DeviceCommunicationStatus {
+  ONLINE
+  OFFLINE
+  WARNING
+  UNKNOWN
+}
+
+enum DeviceCapability {
+  TELEMETRY
+  CONTROL
+  DIAGNOSTICS
+  FIRMWARE_UPDATE
+}
+
+enum CommunicationProtocol {
+  MQTT
+  OPC_UA
+  MODBUS_TCP
+  MODBUS_RTU
+  HTTP
+}
+
+// =============================================================================
+// ENUMS — Sensor
+// =============================================================================
+
+enum SensorStatus {
+  ACTIVE
+  INACTIVE
+  CALIBRATION
+  FAULT
+}
+
+enum CalibrationStatus {
+  CALIBRATED
+  NOT_CALIBRATED
+  DUE
+  EXPIRED
+}
+
+// =============================================================================
+// ENUMS — Telemetry
+// =============================================================================
+
+enum TelemetryQuality {
+  GOOD
+  UNCERTAIN
+  BAD
+}
+
+enum TelemetrySource {
+  SENSOR
+  MANUAL
+  LAB
+  IMPORTED
+}
+
+// =============================================================================
+// ENUMS — Alerts
+// =============================================================================
+
+enum AlertSeverity {
+  LOW
+  MEDIUM
+  HIGH
+  CRITICAL
+}
+
+enum AlertStatus {
+  OPEN
+  ACKNOWLEDGED
+  RESOLVED
+}
+
+enum AlertSource {
+  TELEMETRY
+  WATER_SAMPLE
+  SYSTEM
+  MANUAL
+}
+
+// =============================================================================
+// ENUMS — Maintenance
+// =============================================================================
+
+enum MaintenanceType {
+  PREVENTIVE
+  CORRECTIVE
+  CALIBRATION
+}
+
+enum MaintenanceStatus {
+  SCHEDULED
+  IN_PROGRESS
+  COMPLETED
+  CANCELLED
+}
+
+// =============================================================================
+// ENUMS — Water & Sludge
+// =============================================================================
+
+enum ReusePurpose {
+  IRRIGATION
+  INDUSTRIAL
+  COOLING
+  FLUSHING
+  DISCHARGE
+}
+
+enum SludgeDisposalMethod {
+  LANDFILL
+  COMPOSTING
+  INCINERATION
+  LAND_APPLICATION
+  CO_PROCESSING
+}
+
+// =============================================================================
+// ENUMS — Reports & Compliance
+// =============================================================================
+
+enum ReportType {
+  DAILY
+  WEEKLY
+  MONTHLY
+  COMPLIANCE
+  CUSTOM
+}
+
+enum ComplianceStatus {
+  COMPLIANT
+  WARNING
+  NON_COMPLIANT
+}
+
+// =============================================================================
+// ENUMS — Digital Wastewater Passport
+// =============================================================================
+
+enum PassportStatus {
+  ACTIVE
+  EXPIRED
+  REVOKED
+}
+
+enum PassportType {
+  WASTEWATER
+  COMPLIANCE
+  PLANT
+}
+
+enum PlantHealthStatus {
+  HEALTHY
+  MODERATE
+  CRITICAL
+}
+
+// =============================================================================
+// ENUMS — AI
+// =============================================================================
+
+enum AIModelType {
+  PLANT_HEALTH
+  WATER_QUALITY
+  PREDICTIVE_MAINTENANCE
+  ANOMALY_DETECTION
+}
+
+enum AIFramework {
+  SCIKIT_LEARN
+  XGBOOST
+  PYTORCH
+  TENSORFLOW
+}
+
+enum AIModelStatus {
+  DEVELOPMENT
+  TRAINING
+  VALIDATING
+  READY
+  RETIRED
+  FAILED
+}
+
+enum AIModelDeploymentStatus {
+  NOT_DEPLOYED
+  DEPLOYED
+  ROLLED_BACK
+}
+
+enum AIFeedbackType {
+  ACCEPTED
+  REJECTED
+  MODIFIED
+  NOT_USEFUL
+}
+
+enum RecommendationPriority {
+  LOW
+  MEDIUM
+  HIGH
+  CRITICAL
+}
+
+enum RecommendationStatus {
+  GENERATED
+  PENDING_APPROVAL
+  APPROVED
+  REJECTED
+  EXECUTED
+  EXPIRED
+}
+
+enum AIGuardrailType {
+  DATA_VALIDATION
+  PREDICTION_CONFIDENCE
+  REGULATORY_COMPLIANCE
+  OPERATIONAL_SAFETY
+  HUMAN_APPROVAL
+  EXPLAINABILITY
+  MODEL_PERFORMANCE
+  DATA_DRIFT
+}
+
+enum GuardrailSeverity {
+  INFO
+  WARNING
+  ERROR
+  CRITICAL
+}
+
+enum GuardrailStatus {
+  PASSED
+  FLAGGED
+  BLOCKED
+}
+
+enum AIInferenceStatus {
+  SUCCESS
+  FAILED
+  TIMEOUT
+  CANCELLED
+}
+
+enum AIExplainabilityMethod {
+  NONE
+  SHAP
+  LIME
+}
+
+enum AIProvider {
+  INTERNAL
+  OPENAI
+  AZURE_OPENAI
+  AWS_SAGEMAKER
+  GOOGLE_VERTEX_AI
+}
+
+// =============================================================================
+// ENUMS — Commercial SaaS
+// =============================================================================
+
+enum ModuleCode {
+  AI
+  REPORTS
+  COMPLIANCE
+  DIGITAL_WASTEWATER_PASSPORT
+  PREDICTIVE_MAINTENANCE
+  ANALYTICS
+  DEVICE_MANAGEMENT
+  ALERTS
+}
+
+enum PlanType {
+  COMMUNITY
+  PROFESSIONAL
+  ENTERPRISE
+  GOVERNMENT
+}
+
+enum BillingCycle {
+  MONTHLY
+  QUARTERLY
+  YEARLY
+  LIFETIME
+}
+
+enum SubscriptionStatus {
+  TRIAL
+  ACTIVE
+  SUSPENDED
+  EXPIRED
+  CANCELLED
+}
+
+enum ResourceType {
+  PLANTS
+  DEVICES
+  USERS
+  REPORTS
+  AI_MODELS
+  STORAGE_GB
+}
+
+// =============================================================================
+// ENUMS — Business Rules
+// =============================================================================
+
+enum RuleCategory {
+  AI_GUARDRAIL
+  COMPLIANCE
+  OPERATIONAL
+  MAINTENANCE
+}
+
+enum RuleSeverity {
+  LOW
+  MEDIUM
+  HIGH
+  CRITICAL
+}
+
+enum RuleOperator {
+  EQUALS
+  NOT_EQUALS
+  GREATER_THAN
+  GREATER_THAN_OR_EQUAL
+  LESS_THAN
+  LESS_THAN_OR_EQUAL
+  IN
+  NOT_IN
+}
+
+enum RuleActionType {
+  GENERATE_RECOMMENDATION
+  BLOCK_RECOMMENDATION
+  RAISE_ALERT
+  REQUIRE_APPROVAL
+  SEND_NOTIFICATION
+  CREATE_WORK_ORDER
+  LOG_EVENT
+}
+
+// =============================================================================
+// DOMAIN: Identity & Access
+// =============================================================================
+
+model Role {
+  id          String   @id @default(uuid()) @db.Uuid
+  code        RoleCode @unique
+  name        String
+  description String?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  userRoles       UserRole[]
+  rolePermissions RolePermission[]
+}
+
+model Permission {
+  id          String   @id @default(uuid()) @db.Uuid
+  code        String   @unique
+  name        String
+  module      String
+  description String?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  rolePermissions RolePermission[]
+}
+
+model RolePermission {
+  roleId       String @db.Uuid
+  permissionId String @db.Uuid
+
+  role       Role       @relation(fields: [roleId], references: [id], onDelete: Cascade)
+  permission Permission @relation(fields: [permissionId], references: [id], onDelete: Cascade)
+
+  @@id([roleId, permissionId])
+}
+
+model UserRole {
+  userId String @db.Uuid
+  roleId String @db.Uuid
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+  role Role @relation(fields: [roleId], references: [id], onDelete: Restrict)
+
+  @@id([userId, roleId])
+}
+
+model User {
+  id             String     @id @default(uuid()) @db.Uuid
+  organizationId String     @db.Uuid
+  firstName      String
+  lastName       String?
+  email          String     @unique
+  phone          String?
+  jobTitle       String?
+  passwordHash   String
+  status         UserStatus @default(ACTIVE)
+  createdAt      DateTime   @default(now())
+  updatedAt      DateTime   @updatedAt
+
+  organization Organization @relation(fields: [organizationId], references: [id], onDelete: Restrict)
+
+  userRoles     UserRole[]
+  notifications Notification[]
+  auditLogs     AuditLog[]
+
+  collectedWaterSamples      WaterSample[]             @relation("CollectedByUser")
+  analyzedMeasurements       WaterQualityMeasurement[] @relation("AnalyzedByUser")
+  acknowledgedAlerts         Alert[]                   @relation("AcknowledgedByUser")
+  resolvedAlerts             Alert[]                   @relation("ResolvedByUser")
+  maintenances               Maintenance[]             @relation("PerformedByUser")
+  evaluatedComplianceRecords ComplianceRecord[]        @relation("EvaluatedByUser")
+  generatedReports           Report[]                  @relation("GeneratedReports")
+  registeredDevices          Device[]                  @relation("RegisteredByUser")
+  registeredControllers      Controller[]              @relation("ControllerRegisteredByUser")
+  approvedRecommendations    AIRecommendation[]        @relation("ApprovedByUser")
+  aiFeedback                 AIFeedback[]              @relation("FeedbackByOperator")
+  deployedModelVersions      AIModelVersion[]          @relation("DeployedByUser")
+
+  @@index([organizationId])
+}
+
+model AuditLog {
+  id           String   @id @default(uuid()) @db.Uuid
+  userId       String   @db.Uuid
+  action       String
+  resourceType String
+  resourceId   String
+  oldValues    Json?
+  newValues    Json?
+  ipAddress    String?
+  userAgent    String?
+  createdAt    DateTime @default(now())
+
+  user User @relation(fields: [userId], references: [id], onDelete: Restrict)
+
+  @@index([userId])
+  @@index([createdAt])
+  @@index([resourceType, resourceId])
+}
+
+model Notification {
+  id        String           @id @default(uuid()) @db.Uuid
+  userId    String           @db.Uuid
+  type      NotificationType
+  title     String
+  message   String
+  data      Json?
+  readAt    DateTime?
+  createdAt DateTime         @default(now())
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@index([readAt])
+}
+
+// =============================================================================
+// DOMAIN: Organization
+// =============================================================================
+
+model IndustryType {
+  id          String   @id @default(uuid()) @db.Uuid
+  name        String   @unique
+  description String?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  organizations Organization[]
+}
+
+model Organization {
+  id               String             @id @default(uuid()) @db.Uuid
+  industryTypeId   String             @db.Uuid
+  organizationCode String             @unique
+  legalName        String
+  displayName      String
+  email            String?
+  phone            String?
+  website          String?
+  status           OrganizationStatus @default(ACTIVE)
+  createdAt        DateTime           @default(now())
+  updatedAt        DateTime           @updatedAt
+
+  industryType IndustryType @relation(fields: [industryTypeId], references: [id], onDelete: Restrict)
+
+  users         User[]
+  plants        Plant[]
+  modules       OrganizationModule[]
+  subscriptions OrganizationSubscription[]
+
+  @@index([industryTypeId])
+}
+
+// =============================================================================
+// DOMAIN: Plant Management
+// =============================================================================
+
+model Plant {
+  id             String      @id @default(uuid()) @db.Uuid
+  organizationId String      @db.Uuid
+  plantCode      String      @unique
+  name           String
+  description    String?
+  address        String?
+  latitude       Decimal?    @db.Decimal(9, 6)
+  longitude      Decimal?    @db.Decimal(9, 6)
+  timezone       String?     @default("Asia/Kolkata")
+  plantType      PlantType   @default(INDUSTRIAL)
+  commissionedOn DateTime?
+  status         PlantStatus @default(ACTIVE)
+  createdAt      DateTime    @default(now())
+  updatedAt      DateTime    @updatedAt
+
+  organization Organization @relation(fields: [organizationId], references: [id], onDelete: Restrict)
+
+  treatmentPlants TreatmentPlant[]
+  predictions     AIPrediction[]     @relation("PlantPredictions")
+  recommendations AIRecommendation[] @relation("PlantRecommendations")
+
+  @@index([organizationId])
+}
+
+model TreatmentTechnology {
+  id          String   @id @default(uuid()) @db.Uuid
+  name        String   @unique
+  description String?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  treatmentPlants TreatmentPlant[]
+}
+
+model TreatmentPlant {
+  id                       String             @id @default(uuid()) @db.Uuid
+  plantId                  String             @db.Uuid
+  technologyId             String             @db.Uuid
+  treatmentPlantCode       String             @unique
+  name                     String
+  type                     TreatmentPlantType
+  designCapacityM3Day      Decimal?           @db.Decimal(10, 2)
+  operationalCapacityM3Day Decimal?           @db.Decimal(10, 2)
+  commissionedOn           DateTime
+  status                   PlantStatus        @default(ACTIVE)
+  createdAt                DateTime           @default(now())
+  updatedAt                DateTime           @updatedAt
+
+  plant      Plant               @relation(fields: [plantId], references: [id], onDelete: Restrict)
+  technology TreatmentTechnology @relation(fields: [technologyId], references: [id], onDelete: Restrict)
+
+  controllers            Controller[]
+  waterSamples           WaterSample[]
+  sludgeBatches          SludgeBatch[]
+  treatedWaterReuses     TreatedWaterReuse[]
+  alerts                 Alert[]
+  complianceRecords      ComplianceRecord[]
+  digitalPassports       DigitalWastewaterPassport[]
+  plantHealthAssessments PlantHealthAssessment[]
+  reports                Report[]
+
+  @@index([plantId])
+  @@index([technologyId])
+}
+
+// =============================================================================
+// DOMAIN: Device Management
+// =============================================================================
+
+model Controller {
+  id                  String           @id @default(uuid()) @db.Uuid
+  treatmentPlantId    String           @db.Uuid
+  registeredById      String?          @db.Uuid
+  controllerCode      String           @unique
+  name                String
+  manufacturer        String?
+  model               String?
+  serialNumber        String?
+  firmwareVersion     String?
+  ipAddress           String?
+  port                Int?
+  authenticationToken String?
+  installedOn         DateTime?
+  lastHeartbeatAt     DateTime?
+  notes               String?
+  status              ControllerStatus @default(ACTIVE)
+  createdAt           DateTime         @default(now())
+  updatedAt           DateTime         @updatedAt
+
+  treatmentPlant TreatmentPlant @relation(fields: [treatmentPlantId], references: [id], onDelete: Restrict)
+  registeredBy   User?          @relation("ControllerRegisteredByUser", fields: [registeredById], references: [id], onDelete: SetNull)
+
+  devices Device[]
+
+  @@index([treatmentPlantId])
+  @@index([registeredById])
+}
+
+model Device {
+  id                   String                    @id @default(uuid()) @db.Uuid
+  controllerId         String                    @db.Uuid
+  protocolAdapterId    String?                   @db.Uuid
+  registeredById       String?                   @db.Uuid
+  deviceCode           String                    @unique
+  name                 String
+  capabilities         Json?
+  manufacturer         String?
+  model                String?
+  serialNumber         String?
+  installationLocation String?
+  installedOn          DateTime?
+  ipAddress            String?
+  port                 Int?
+  notes                String?
+  status               DeviceStatus              @default(ONLINE)
+  communicationStatus  DeviceCommunicationStatus @default(OFFLINE)
+  authenticationToken  String?
+  registeredAt         DateTime?
+  lastHeartbeatAt      DateTime?
+  lastSeenAt           DateTime?
+  createdAt            DateTime                  @default(now())
+  updatedAt            DateTime                  @updatedAt
+
+  controller      Controller       @relation(fields: [controllerId], references: [id], onDelete: Restrict)
+  protocolAdapter ProtocolAdapter? @relation(fields: [protocolAdapterId], references: [id], onDelete: SetNull)
+  registeredBy    User?            @relation("RegisteredByUser", fields: [registeredById], references: [id], onDelete: SetNull)
+
+  sensors      Sensor[]
+  maintenances Maintenance[]
+  predictions  AIPrediction[] @relation("DevicePredictions")
+
+  @@index([controllerId])
+  @@index([protocolAdapterId])
+  @@index([registeredById])
+}
+
+// =============================================================================
+// DOMAIN: Sensor Management
+// =============================================================================
+
+model SensorType {
+  id          String   @id @default(uuid()) @db.Uuid
+  code        String   @unique
+  name        String
+  description String?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  sensors Sensor[]
+}
+
+model Parameter {
+  id            String   @id @default(uuid()) @db.Uuid
+  code          String   @unique
+  name          String
+  unit          String
+  acceptableMin Decimal? @db.Decimal(12, 4)
+  acceptableMax Decimal? @db.Decimal(12, 4)
+  description   String?
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  sensors      Sensor[]
+  measurements WaterQualityMeasurement[]
+}
+
+model Sensor {
+  id                      String            @id @default(uuid()) @db.Uuid
+  deviceId                String            @db.Uuid
+  sensorTypeId            String            @db.Uuid
+  parameterId             String            @db.Uuid
+  sensorCode              String            @unique
+  name                    String
+  manufacturer            String?
+  model                   String?
+  serialNumber            String?
+  unit                    String?
+  minimumRange            Decimal?          @db.Decimal(10, 2)
+  maximumRange            Decimal?          @db.Decimal(10, 2)
+  samplingIntervalSeconds Int?
+  installationLocation    String?
+  calibrationStatus       CalibrationStatus @default(NOT_CALIBRATED)
+  lastCalibratedAt        DateTime?
+  nextCalibrationDate     DateTime?
+  installedOn             DateTime?
+  notes                   String?
+  status                  SensorStatus      @default(ACTIVE)
+  createdAt               DateTime          @default(now())
+  updatedAt               DateTime          @updatedAt
+
+  device     Device     @relation(fields: [deviceId], references: [id], onDelete: Restrict)
+  sensorType SensorType @relation(fields: [sensorTypeId], references: [id], onDelete: Restrict)
+  parameter  Parameter  @relation(fields: [parameterId], references: [id], onDelete: Restrict)
+
+  telemetry Telemetry[]
+  alerts    Alert[]
+
+  @@index([deviceId])
+  @@index([sensorTypeId])
+  @@index([parameterId])
+}
+
+// =============================================================================
+// DOMAIN: Telemetry
+// =============================================================================
+
+model Telemetry {
+  id         String           @id @default(uuid()) @db.Uuid
+  sensorId   String           @db.Uuid
+  value      Decimal          @db.Decimal(12, 4)
+  quality    TelemetryQuality @default(GOOD)
+  source     TelemetrySource  @default(SENSOR)
+  recordedAt DateTime
+  receivedAt DateTime?
+  createdAt  DateTime         @default(now())
+
+  sensor Sensor @relation(fields: [sensorId], references: [id], onDelete: Restrict)
+
+  alerts Alert[]
+
+  @@index([sensorId])
+  @@index([recordedAt])
+  @@index([sensorId, recordedAt])
+}
+
+// =============================================================================
+// DOMAIN: Water Sampling
+// =============================================================================
+
+model WaterSample {
+  id               String   @id @default(uuid()) @db.Uuid
+  treatmentPlantId String   @db.Uuid
+  collectedById    String   @db.Uuid
+  sampleCode       String   @unique
+  sampleLocation   String?
+  sampleSource     String?
+  collectedAt      DateTime
+  remarks          String?
+  createdAt        DateTime @default(now())
+  updatedAt        DateTime @updatedAt
+
+  treatmentPlant TreatmentPlant @relation(fields: [treatmentPlantId], references: [id], onDelete: Restrict)
+  collectedBy    User           @relation("CollectedByUser", fields: [collectedById], references: [id], onDelete: Restrict)
+
+  waterQualityMeasurements WaterQualityMeasurement[]
+
+  @@index([treatmentPlantId])
+  @@index([collectedById])
+}
+
+model WaterQualityMeasurement {
+  id           String    @id @default(uuid()) @db.Uuid
+  sampleId     String    @db.Uuid
+  parameterId  String    @db.Uuid
+  analyzedById String?   @db.Uuid
+  value        Decimal   @db.Decimal(12, 4)
+  remarks      String?
+  analyzedAt   DateTime?
+  createdAt    DateTime  @default(now())
+
+  sample     WaterSample @relation(fields: [sampleId], references: [id], onDelete: Cascade)
+  parameter  Parameter   @relation(fields: [parameterId], references: [id], onDelete: Restrict)
+  analyzedBy User?       @relation("AnalyzedByUser", fields: [analyzedById], references: [id], onDelete: SetNull)
+
+  @@index([sampleId])
+  @@index([parameterId])
+  @@index([analyzedById])
+}
+
+// =============================================================================
+// DOMAIN: Sludge & Reuse
+// =============================================================================
+
+model SludgeBatch {
+  id               String                @id @default(uuid()) @db.Uuid
+  treatmentPlantId String                @db.Uuid
+  batchNumber      String                @unique
+  generatedDate    DateTime
+  quantity         Decimal               @db.Decimal(12, 2)
+  unit             String
+  disposalMethod   SludgeDisposalMethod?
+  disposedAt       DateTime?
+  remarks          String?
+  createdAt        DateTime              @default(now())
+  updatedAt        DateTime              @updatedAt
+
+  treatmentPlant TreatmentPlant @relation(fields: [treatmentPlantId], references: [id], onDelete: Restrict)
+
+  @@index([treatmentPlantId])
+}
+
+model TreatedWaterReuse {
+  id               String       @id @default(uuid()) @db.Uuid
+  treatmentPlantId String       @db.Uuid
+  reusePurpose     ReusePurpose
+  reuseQuantity    Decimal      @db.Decimal(12, 2)
+  reusedAt         DateTime
+  remarks          String?
+  createdAt        DateTime     @default(now())
+  updatedAt        DateTime     @updatedAt
+
+  treatmentPlant TreatmentPlant @relation(fields: [treatmentPlantId], references: [id], onDelete: Restrict)
+
+  @@index([treatmentPlantId])
+}
+
+// =============================================================================
+// DOMAIN: Alerts
+// =============================================================================
+
+model Alert {
+  id               String        @id @default(uuid()) @db.Uuid
+  treatmentPlantId String        @db.Uuid
+  sensorId         String?       @db.Uuid
+  telemetryId      String?       @db.Uuid
+  acknowledgedById String?       @db.Uuid
+  resolvedById     String?       @db.Uuid
+  title            String
+  description      String?
+  severity         AlertSeverity
+  status           AlertStatus   @default(OPEN)
+  source           AlertSource
+  acknowledgedAt   DateTime?
+  resolvedAt       DateTime?
+  createdAt        DateTime      @default(now())
+  updatedAt        DateTime      @updatedAt
+
+  treatmentPlant TreatmentPlant @relation(fields: [treatmentPlantId], references: [id], onDelete: Restrict)
+  sensor         Sensor?        @relation(fields: [sensorId], references: [id], onDelete: SetNull)
+  telemetry      Telemetry?     @relation(fields: [telemetryId], references: [id], onDelete: SetNull)
+  acknowledgedBy User?          @relation("AcknowledgedByUser", fields: [acknowledgedById], references: [id], onDelete: SetNull)
+  resolvedBy     User?          @relation("ResolvedByUser", fields: [resolvedById], references: [id], onDelete: SetNull)
+
+  @@index([treatmentPlantId])
+  @@index([sensorId])
+  @@index([telemetryId])
+  @@index([status, severity])
+  @@index([treatmentPlantId, status])
+}
+
+// =============================================================================
+// DOMAIN: Maintenance
+// =============================================================================
+
+model Maintenance {
+  id              String            @id @default(uuid()) @db.Uuid
+  deviceId        String            @db.Uuid
+  performedById   String?           @db.Uuid
+  maintenanceType MaintenanceType
+  status          MaintenanceStatus @default(SCHEDULED)
+  scheduledDate   DateTime?
+  performedDate   DateTime?
+  description     String?
+  remarks         String?
+  createdAt       DateTime          @default(now())
+  updatedAt       DateTime          @updatedAt
+
+  device      Device @relation(fields: [deviceId], references: [id], onDelete: Restrict)
+  performedBy User?  @relation("PerformedByUser", fields: [performedById], references: [id], onDelete: SetNull)
+
+  @@index([deviceId])
+  @@index([performedById])
+  @@index([status])
+}
+
+// =============================================================================
+// DOMAIN: Reports & Compliance
+// =============================================================================
+
+model Report {
+  id               String     @id @default(uuid()) @db.Uuid
+  treatmentPlantId String     @db.Uuid
+  generatedById    String     @db.Uuid
+  reportType       ReportType
+  title            String
+  filePath         String?
+  createdAt        DateTime   @default(now())
+
+  treatmentPlant TreatmentPlant @relation(fields: [treatmentPlantId], references: [id], onDelete: Restrict)
+  generatedBy    User           @relation("GeneratedReports", fields: [generatedById], references: [id], onDelete: Restrict)
+
+  complianceRecords ComplianceRecord[]
+  digitalPassports  DigitalWastewaterPassport[]
+
+  @@index([treatmentPlantId])
+  @@index([generatedById])
+}
+
+model ComplianceRecord {
+  id               String           @id @default(uuid()) @db.Uuid
+  treatmentPlantId String           @db.Uuid
+  reportId         String?          @db.Uuid
+  evaluatedById    String?          @db.Uuid
+  overallStatus    ComplianceStatus
+  complianceScore  Decimal          @db.Decimal(5, 2)
+  evaluatedAt      DateTime
+  remarks          String?
+  createdAt        DateTime         @default(now())
+  updatedAt        DateTime         @updatedAt
+
+  treatmentPlant TreatmentPlant @relation(fields: [treatmentPlantId], references: [id], onDelete: Restrict)
+  report         Report?        @relation(fields: [reportId], references: [id], onDelete: SetNull)
+  evaluatedBy    User?          @relation("EvaluatedByUser", fields: [evaluatedById], references: [id], onDelete: SetNull)
+
+  @@index([treatmentPlantId])
+  @@index([evaluatedAt])
+}
+
+// =============================================================================
+// DOMAIN: Digital Wastewater Passport
+// =============================================================================
+
+model DigitalWastewaterPassport {
+  id               String         @id @default(uuid()) @db.Uuid
+  treatmentPlantId String         @db.Uuid
+  reportId         String?        @db.Uuid
+  passportNumber   String         @unique
+  passportType     PassportType
+  status           PassportStatus
+  validUntil       DateTime?
+  issuedAt         DateTime
+  filePath         String?
+  remarks          String?
+  createdAt        DateTime       @default(now())
+  updatedAt        DateTime       @updatedAt
+
+  treatmentPlant TreatmentPlant @relation(fields: [treatmentPlantId], references: [id], onDelete: Restrict)
+  report         Report?        @relation(fields: [reportId], references: [id], onDelete: SetNull)
+
+  @@index([treatmentPlantId])
+  @@index([status])
+}
+
+// =============================================================================
+// DOMAIN: Plant Health Assessment
+// =============================================================================
+
+model PlantHealthAssessment {
+  id               String            @id @default(uuid()) @db.Uuid
+  treatmentPlantId String            @db.Uuid
+  telemetryScore   Decimal?          @db.Decimal(5, 2)
+  maintenanceScore Decimal?          @db.Decimal(5, 2)
+  complianceScore  Decimal?          @db.Decimal(5, 2)
+  alertScore       Decimal?          @db.Decimal(5, 2)
+  healthStatus     PlantHealthStatus
+  evaluatedAt      DateTime
+  recommendation   String?
+  createdAt        DateTime          @default(now())
+
+  treatmentPlant TreatmentPlant @relation(fields: [treatmentPlantId], references: [id], onDelete: Restrict)
+
+  @@index([treatmentPlantId])
+  @@index([evaluatedAt])
+}
+
+// =============================================================================
+// DOMAIN: Protocol Abstraction
+// =============================================================================
+
+model ProtocolAdapter {
+  id            String                @id @default(uuid()) @db.Uuid
+  code          String                @unique
+  name          String
+  protocol      CommunicationProtocol
+  version       String?
+  endpoint      String?
+  port          Int?
+  configuration Json?
+  isEnabled     Boolean               @default(true)
+  createdAt     DateTime              @default(now())
+  updatedAt     DateTime              @updatedAt
+
+  devices Device[]
+
+  @@index([protocol])
+}
+
+// =============================================================================
+// DOMAIN: Commercial SaaS — Modules
+// =============================================================================
+
+model Module {
+  id          String     @id @default(uuid()) @db.Uuid
+  code        ModuleCode @unique
+  name        String
+  description String?
+  isCore      Boolean    @default(false)
+  createdAt   DateTime   @default(now())
+  updatedAt   DateTime   @updatedAt
+
+  organizationModules OrganizationModule[]
+  planModules         PlanModule[]
+}
+
+model OrganizationModule {
+  id             String    @id @default(uuid()) @db.Uuid
+  organizationId String    @db.Uuid
+  moduleId       String    @db.Uuid
+  enabled        Boolean   @default(true)
+  activatedAt    DateTime?
+  expiresAt      DateTime?
+  createdAt      DateTime  @default(now())
+
+  organization Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  module       Module       @relation(fields: [moduleId], references: [id], onDelete: Restrict)
+
+  @@unique([organizationId, moduleId])
+  @@index([organizationId])
+}
+
+// =============================================================================
+// DOMAIN: Commercial SaaS — Subscriptions
+// =============================================================================
+
+model SubscriptionPlan {
+  id           String       @id @default(uuid()) @db.Uuid
+  code         String       @unique
+  name         String
+  description  String?
+  planType     PlanType
+  price        Decimal?     @db.Decimal(12, 2)
+  billingCycle BillingCycle
+  isActive     Boolean      @default(true)
+  createdAt    DateTime     @default(now())
+  updatedAt    DateTime     @updatedAt
+
+  modules       PlanModule[]
+  subscriptions OrganizationSubscription[]
+  planLimits    PlanLimit[]
+}
+
+model PlanModule {
+  id       String  @id @default(uuid()) @db.Uuid
+  planId   String  @db.Uuid
+  moduleId String  @db.Uuid
+  enabled  Boolean @default(true)
+
+  plan   SubscriptionPlan @relation(fields: [planId], references: [id], onDelete: Cascade)
+  module Module           @relation(fields: [moduleId], references: [id], onDelete: Restrict)
+
+  @@unique([planId, moduleId])
+  @@index([planId])
+}
+
+model OrganizationSubscription {
+  id             String             @id @default(uuid()) @db.Uuid
+  organizationId String             @db.Uuid
+  planId         String             @db.Uuid
+  status         SubscriptionStatus
+  startedAt      DateTime
+  expiresAt      DateTime?
+  createdAt      DateTime           @default(now())
+
+  organization Organization     @relation(fields: [organizationId], references: [id], onDelete: Restrict)
+  plan         SubscriptionPlan @relation(fields: [planId], references: [id], onDelete: Restrict)
+
+  @@index([organizationId])
+  @@index([status])
+}
+
+model PlanLimit {
+  id        String       @id @default(uuid()) @db.Uuid
+  planId    String       @db.Uuid
+  resource  ResourceType
+  limit     Int
+  createdAt DateTime     @default(now())
+
+  plan SubscriptionPlan @relation(fields: [planId], references: [id], onDelete: Cascade)
+
+  @@unique([planId, resource])
+  @@index([planId])
+}
+
+// =============================================================================
+// DOMAIN: Business Rules Engine
+// =============================================================================
+
+model Rule {
+  id          String       @id @default(uuid()) @db.Uuid
+  code        String       @unique
+  name        String
+  description String?
+  category    RuleCategory
+  severity    RuleSeverity
+  enabled     Boolean      @default(true)
+  createdAt   DateTime     @default(now())
+  updatedAt   DateTime     @updatedAt
+
+  conditions RuleCondition[]
+  actions    RuleAction[]
+}
+
+model RuleCondition {
+  id       String       @id @default(uuid()) @db.Uuid
+  ruleId   String       @db.Uuid
+  field    String
+  operator RuleOperator
+  value    Json
+
+  rule Rule @relation(fields: [ruleId], references: [id], onDelete: Cascade)
+
+  @@index([ruleId])
+}
+
+model RuleAction {
+  id             String         @id @default(uuid()) @db.Uuid
+  ruleId         String         @db.Uuid
+  actionType     RuleActionType
+  executionOrder Int            @default(1)
+  configuration  Json?
+  createdAt      DateTime       @default(now())
+
+  rule Rule @relation(fields: [ruleId], references: [id], onDelete: Cascade)
+
+  @@index([ruleId])
+}
+
+// =============================================================================
+// DOMAIN: AI — Models & Versions
+// =============================================================================
+
+model AIModel {
+  id                       String                 @id @default(uuid()) @db.Uuid
+  code                     String                 @unique
+  name                     String
+  description              String?
+  type                     AIModelType
+  activeVersionId          String?                @unique @db.Uuid
+  isEnabled                Boolean                @default(true)
+  explainabilityMethod     AIExplainabilityMethod @default(SHAP)
+  supportsExplainability   Boolean                @default(true)
+  supportsRecommendations  Boolean                @default(true)
+  supportsFeedbackLearning Boolean                @default(false)
+  createdAt                DateTime               @default(now())
+  updatedAt                DateTime               @updatedAt
+
+  activeVersion AIModelVersion?  @relation("ActiveModelVersion", fields: [activeVersionId], references: [id], onDelete: SetNull)
+  versions      AIModelVersion[] @relation("ModelVersions")
+
+  @@index([type])
+  @@index([isEnabled])
+}
+
+model AIModelVersion {
+  id                String                  @id @default(uuid()) @db.Uuid
+  modelId           String                  @db.Uuid
+  deployedById      String?                 @db.Uuid
+  rollbackVersionId String?                 @db.Uuid
+  version           String
+  framework         AIFramework
+  frameworkVersion  String?
+  provider          AIProvider              @default(INTERNAL)
+  status            AIModelStatus           @default(DEVELOPMENT)
+  deploymentStatus  AIModelDeploymentStatus @default(NOT_DEPLOYED)
+  artifactUri       String?
+  checksum          String?
+  datasetName       String?
+  datasetVersion    String?
+  datasetSource     String?
+  metrics           Json?
+  trainedAt         DateTime?
+  deployedAt        DateTime?
+  createdAt         DateTime                @default(now())
+  updatedAt         DateTime                @updatedAt
+
+  model           AIModel          @relation("ModelVersions", fields: [modelId], references: [id], onDelete: Cascade)
+  deployedBy      User?            @relation("DeployedByUser", fields: [deployedById], references: [id], onDelete: SetNull)
+  rollbackVersion AIModelVersion?  @relation("ModelRollback", fields: [rollbackVersionId], references: [id], onDelete: SetNull)
+  rolledBackFrom  AIModelVersion[] @relation("ModelRollback")
+  activeFor       AIModel?         @relation("ActiveModelVersion")
+
+  trainingJobs  AITrainingJob[]
+  predictions   AIPrediction[]   @relation("ModelVersionPredictions")
+  inferenceLogs AIInferenceLog[]
+
+  @@unique([modelId, version])
+  @@index([modelId])
+  @@index([status])
+  @@index([framework])
+}
+
+// =============================================================================
+// DOMAIN: AI — Training, Configuration, Inference
+// =============================================================================
+
+model AITrainingJob {
+  id             String        @id @default(uuid()) @db.Uuid
+  modelVersionId String?       @db.Uuid
+  datasetName    String
+  datasetVersion String?
+  datasetSource  String?
+  framework      AIFramework
+  status         AIModelStatus
+  metrics        Json?
+  startedAt      DateTime?
+  completedAt    DateTime?
+  createdAt      DateTime      @default(now())
+
+  modelVersion AIModelVersion? @relation(fields: [modelVersionId], references: [id], onDelete: SetNull)
+
+  @@index([modelVersionId])
+  @@index([status])
+}
+
+model AIConfiguration {
+  id                         String   @id @default(uuid()) @db.Uuid
+  minimumConfidenceThreshold Decimal  @db.Decimal(5, 2)
+  enableExplainability       Boolean  @default(true)
+  enableRecommendations      Boolean  @default(true)
+  enableGuardrails           Boolean  @default(true)
+  enableFeedbackLearning     Boolean  @default(false)
+  createdAt                  DateTime @default(now())
+  updatedAt                  DateTime @updatedAt
+}
+
+model AIInferenceLog {
+  id             String            @id @default(uuid()) @db.Uuid
+  modelVersionId String            @db.Uuid
+  predictionId   String?           @db.Uuid
+  latencyMs      Int
+  status         AIInferenceStatus
+  errorMessage   String?
+  createdAt      DateTime          @default(now())
+
+  modelVersion AIModelVersion @relation(fields: [modelVersionId], references: [id], onDelete: Restrict)
+  prediction   AIPrediction?  @relation(fields: [predictionId], references: [id], onDelete: SetNull)
+
+  @@index([modelVersionId])
+  @@index([predictionId])
+  @@index([createdAt])
+}
+
+// =============================================================================
+// DOMAIN: AI — Predictions & Explanations
+// =============================================================================
+
+model AIPrediction {
+  id               String      @id @default(uuid()) @db.Uuid
+  modelVersionId   String      @db.Uuid
+  plantId          String      @db.Uuid
+  deviceId         String?     @db.Uuid
+  predictionType   AIModelType
+  predictionValue  Json
+  confidenceScore  Decimal?    @db.Decimal(5, 2)
+  inputSnapshot    Json?
+  processingTimeMs Int?
+  predictedAt      DateTime    @default(now())
+
+  modelVersion AIModelVersion @relation("ModelVersionPredictions", fields: [modelVersionId], references: [id], onDelete: Restrict)
+  plant        Plant          @relation("PlantPredictions", fields: [plantId], references: [id], onDelete: Restrict)
+  device       Device?        @relation("DevicePredictions", fields: [deviceId], references: [id], onDelete: SetNull)
+
+  explanations   AIPredictionExplanation[]
+  recommendation AIRecommendation?
+  feedback       AIFeedback[]
+  guardrailLogs  AIGuardrailLog[]
+  inferenceLogs  AIInferenceLog[]
+
+  @@index([plantId])
+  @@index([modelVersionId])
+  @@index([predictedAt])
+  @@index([predictionType])
+}
+
+model AIPredictionExplanation {
+  id             String   @id @default(uuid()) @db.Uuid
+  predictionId   String   @db.Uuid
+  featureName    String
+  featureValue   Json?
+  shapValue      Decimal  @db.Decimal(12, 6)
+  importanceRank Int?
+  createdAt      DateTime @default(now())
+
+  prediction AIPrediction @relation(fields: [predictionId], references: [id], onDelete: Cascade)
+
+  @@index([predictionId])
+  @@index([featureName])
+}
+
+// =============================================================================
+// DOMAIN: AI — Recommendations, Feedback & Guardrails
+// =============================================================================
+
+model AIRecommendation {
+  id           String                 @id @default(uuid()) @db.Uuid
+  predictionId String                 @unique @db.Uuid
+  plantId      String                 @db.Uuid
+  approvedById String?                @db.Uuid
+  title        String
+  description  String
+  priority     RecommendationPriority
+  status       RecommendationStatus
+  approvedAt   DateTime?
+  executedAt   DateTime?
+  createdAt    DateTime               @default(now())
+  updatedAt    DateTime               @updatedAt
+
+  prediction AIPrediction @relation(fields: [predictionId], references: [id], onDelete: Cascade)
+  plant      Plant        @relation("PlantRecommendations", fields: [plantId], references: [id], onDelete: Restrict)
+  approvedBy User?        @relation("ApprovedByUser", fields: [approvedById], references: [id], onDelete: SetNull)
+
+  feedback      AIFeedback[]
+  guardrailLogs AIGuardrailLog[]
+
+  @@index([plantId])
+  @@index([status])
+}
+
+model AIFeedback {
+  id               String         @id @default(uuid()) @db.Uuid
+  predictionId     String         @db.Uuid
+  recommendationId String?        @db.Uuid
+  operatorId       String         @db.Uuid
+  feedback         AIFeedbackType
+  comments         String?
+  actualOutcome    String?
+  createdAt        DateTime       @default(now())
+
+  prediction     AIPrediction      @relation(fields: [predictionId], references: [id], onDelete: Cascade)
+  recommendation AIRecommendation? @relation(fields: [recommendationId], references: [id], onDelete: SetNull)
+  operator       User              @relation("FeedbackByOperator", fields: [operatorId], references: [id], onDelete: Restrict)
+
+  @@index([predictionId])
+  @@index([operatorId])
+}
+
+model AIGuardrailLog {
+  id               String            @id @default(uuid()) @db.Uuid
+  predictionId     String?           @db.Uuid
+  recommendationId String?           @db.Uuid
+  guardrailType    AIGuardrailType
+  severity         GuardrailSeverity
+  status           GuardrailStatus
+  message          String
+  createdAt        DateTime          @default(now())
+
+  prediction     AIPrediction?     @relation(fields: [predictionId], references: [id], onDelete: SetNull)
+  recommendation AIRecommendation? @relation(fields: [recommendationId], references: [id], onDelete: SetNull)
+
+  @@index([guardrailType])
+  @@index([severity])
+  @@index([status])
+  @@index([createdAt])
+}
