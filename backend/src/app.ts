@@ -11,6 +11,7 @@ import helmet from 'helmet';
 import cors from 'cors';
 import morgan from 'morgan';
 import cookieParser from 'cookie-parser';
+import rateLimit from 'express-rate-limit';
 import swaggerJsdoc from 'swagger-jsdoc';
 import swaggerUi from 'swagger-ui-express';
 import { env } from './config/env';
@@ -18,6 +19,8 @@ import { authRouter } from './modules/auth';
 import { AuthServiceError } from './modules/auth';
 import { AuthTokenError } from './modules/auth';
 import { AuthorizationError } from './modules/authorization';
+import { organizationRouter } from './modules/organization';
+import { OrganizationError }   from './modules/organization';
 import { ZodError } from 'zod';
 
 // ─── Swagger definition ───────────────────────────────────────────────────────
@@ -195,6 +198,21 @@ const swaggerSpec = swaggerJsdoc({
   apis: ['./src/modules/**/routes/*.ts'],
 });
 
+// ─── Rate Limiters ────────────────────────────────────────────────────────────
+
+/** Strict limiter for sensitive auth mutations (login, forgot-password). */
+const authMutationLimiter = rateLimit({
+  windowMs:         5 * 60 * 1000, // 5 minutes
+  max:              60,
+  standardHeaders:  'draft-7',
+  legacyHeaders:    false,
+  message: {
+    success: false,
+    error: { code: 'RATE_LIMIT_EXCEEDED', message: 'Too many requests, please try again later.' },
+  },
+  skip: (req) => req.app.get('env') === 'test',
+});
+
 // ─── App factory ──────────────────────────────────────────────────────────────
 
 export function createApp(): express.Application {
@@ -234,7 +252,8 @@ export function createApp(): express.Application {
   });
 
   // ── Routes ───────────────────────────────────────────────────────────────
-  app.use('/api/auth', authRouter);
+  app.use('/api/auth',          authMutationLimiter, authRouter);
+  app.use('/api/organizations', organizationRouter);
 
   // ── 404 handler ──────────────────────────────────────────────────────────
   app.use((_req: Request, res: Response) => {
@@ -254,7 +273,7 @@ export function createApp(): express.Application {
         error: {
           code:    'VALIDATION_ERROR',
           message: 'Request validation failed',
-          fields:  err.errors.map((e) => ({
+          fields:  err.issues.map((e) => ({
             field:   e.path.join('.') || 'body',
             message: e.message,
           })),
@@ -283,6 +302,15 @@ export function createApp(): express.Application {
 
     // Authorization (RBAC) errors
     if (err instanceof AuthorizationError) {
+      res.status(err.statusHint).json({
+        success: false,
+        error: { code: err.code, message: err.message },
+      });
+      return;
+    }
+
+    // Organization domain errors
+    if (err instanceof OrganizationError) {
       res.status(err.statusHint).json({
         success: false,
         error: { code: err.code, message: err.message },

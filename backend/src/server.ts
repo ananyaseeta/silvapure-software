@@ -8,6 +8,7 @@
 import { createApp } from './app';
 import { env } from './config/env';
 import { prisma } from './config/prisma';
+import { closeRedisClient } from './modules/authorization/config/redis';
 
 const app    = createApp();
 const server = app.listen(env.PORT, () => {
@@ -26,8 +27,11 @@ async function shutdown(signal: string): Promise<void> {
 
   server.close(async () => {
     console.log('[Server] HTTP server closed');
-    await prisma.$disconnect();
-    console.log('[Server] Database connection closed');
+    await Promise.all([
+      prisma.$disconnect(),
+      closeRedisClient(),
+    ]);
+    console.log('[Server] Database and Redis connections closed');
     process.exit(0);
   });
 

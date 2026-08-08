@@ -16,6 +16,7 @@
  */
 
 import { Router } from 'express';
+import rateLimit from 'express-rate-limit';
 import { authenticate } from '../middleware/authenticate.middleware';
 import {
   validateLogin,
@@ -34,6 +35,19 @@ import {
 } from '../controllers/auth.controller';
 
 export const authRouter = Router();
+
+/** Tighter limiter specifically for token refresh (higher request volume, lower risk). */
+const refreshLimiter = rateLimit({
+  windowMs:        5 * 60 * 1000,
+  max:             60,
+  standardHeaders: 'draft-7',
+  legacyHeaders:   false,
+  message: {
+    success: false,
+    error: { code: 'RATE_LIMIT_EXCEEDED', message: 'Too many requests, please try again later.' },
+  },
+  skip: (req) => req.app.get('env') === 'test',
+});
 
 /**
  * @swagger
@@ -99,7 +113,7 @@ authRouter.post('/login', validateLogin, login);
  *       401:
  *         $ref: '#/components/responses/Unauthorized'
  */
-authRouter.post('/refresh', refresh);
+authRouter.post('/refresh', refreshLimiter, refresh);
 
 /**
  * @swagger

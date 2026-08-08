@@ -7,52 +7,106 @@
  * Run manually:
  *   npx prisma db seed
  *
- * Seeder execution order is strict — dependencies must be satisfied:
+ * Run with demo data:
+ *   SEED_DEMO=true npx prisma db seed
  *
- *   Phase 2 — Task 1: RBAC
- *   ┌─────────────────────┐
- *   │  1. seedRoles        │  No dependencies
- *   │  2. seedPermissions  │  No dependencies (runs in parallel with roles)
- *   │  3. seedRolePerms    │  Requires roles + permissions to exist
- *   └─────────────────────┘
+ * =============================================================================
+ * SEEDER DEPENDENCY ORDER
+ * =============================================================================
  *
- * Design principles:
+ * Phase 1 — Independent reference data (all run in parallel)
+ *   ├── seedRoles
+ *   ├── seedPermissions
+ *   ├── seedIndustryTypes
+ *   ├── seedTreatmentTechnologies
+ *   ├── seedSensorTypes
+ *   ├── seedParameters
+ *   ├── seedProtocolAdapters
+ *   ├── seedModules           ← must finish before Phase 2 (subscriptions need modules)
+ *   ├── seedRules             ← no FK deps on seeded data
+ *   └── seedAIModels          ← no FK deps on seeded data
+ *
+ * Phase 2 — Depends on Phase 1 rows existing
+ *   ├── seedRolePermissions   ← requires roles + permissions
+ *   └── seedSubscriptionPlans ← requires modules
+ *
+ * Phase 3 — Optional demo data (guarded by SEED_DEMO=true)
+ *   └── seedDemoData          ← requires industries + treatmentTechnologies + roles
+ *
+ * =============================================================================
+ * Design principles
+ * =============================================================================
  *   - Each seeder is independently transactional. A failure in one seeder
  *     rolls back only that seeder's changes.
- *   - Roles and permissions are independent and seeded in parallel.
- *   - Role-permission mappings are seeded last, after both complete.
- *   - No demo data, mock users, or test organizations are created here.
+ *   - Phase 1 seeders run in parallel for speed.
+ *   - Phase 2 seeders run sequentially after Phase 1 is fully settled.
  *   - Idempotent: safe to run on a populated database.
- *   - Exit code 1 on any seeder failure — Prisma CLI will surface the error.
+ *   - Exit code 1 on any seeder failure — Prisma CLI surfaces the error.
  */
 
 import { PrismaClient } from '@prisma/client';
 import { logger } from './seed/utils/logger';
-import { seedRoles } from './seed/seeders/roles.seed';
-import { seedPermissions } from './seed/seeders/permissions.seed';
-import { seedRolePermissions } from './seed/seeders/rolePermissions.seed';
+
+// ── Phase 1 seeders ───────────────────────────────────────────────────────────
+import { seedRoles }                 from './seed/seeders/roles.seed';
+import { seedPermissions }           from './seed/seeders/permissions.seed';
+import { seedIndustryTypes }         from './seed/seeders/industrySeeder';
+import { seedTreatmentTechnologies } from './seed/seeders/treatmentSeeder';
+import { seedSensorTypes }           from './seed/seeders/sensorSeeder';
+import { seedParameters }            from './seed/seeders/parameterSeeder';
+import { seedProtocolAdapters }      from './seed/seeders/protocolSeeder';
+import { seedModules }               from './seed/seeders/moduleSeeder';
+import { seedRules }                 from './seed/seeders/ruleSeeder';
+import { seedAIModels }              from './seed/seeders/aiSeeder';
+
+// ── Phase 2 seeders ───────────────────────────────────────────────────────────
+import { seedRolePermissions }     from './seed/seeders/rolePermissions.seed';
+import { seedSubscriptionPlans }   from './seed/seeders/subscriptionSeeder';
+
+// ── Phase 3 seeders ───────────────────────────────────────────────────────────
+import { seedDemoData } from './seed/seeders/demoSeeder';
+
+// ─── Main ─────────────────────────────────────────────────────────────────────
 
 const prisma = new PrismaClient();
 
 async function main(): Promise<void> {
-  logger.section('SILVAPURE Database Seed — Phase 2: RBAC');
-  logger.info('Environment', { nodeEnv: process.env.NODE_ENV ?? 'unset' });
+  logger.section('SILVAPURE — Database Seed');
+  logger.info('Environment', {
+    nodeEnv:  process.env['NODE_ENV'] ?? 'unset',
+    seedDemo: process.env['SEED_DEMO'] ?? 'false',
+  });
 
-  // ── Step 1: Seed roles and permissions in parallel ─────────────────────────
-  logger.section('Step 1 — Roles & Permissions');
+  // ── Phase 1: All independent reference data in parallel ───────────────────
+  logger.section('Phase 1 — Reference Data (parallel)');
   await Promise.all([
     seedRoles(prisma),
     seedPermissions(prisma),
+    seedIndustryTypes(prisma),
+    seedTreatmentTechnologies(prisma),
+    seedSensorTypes(prisma),
+    seedParameters(prisma),
+    seedProtocolAdapters(prisma),
+    seedModules(prisma),
+    seedRules(prisma),
+    seedAIModels(prisma),
   ]);
+  logger.success('Phase 1 complete');
 
-  // ── Step 2: Seed role-permission mappings ──────────────────────────────────
-  // Must run after both roles and permissions exist in the database.
-  logger.section('Step 2 — Role-Permission Mappings');
+  // ── Phase 2: Data with FK dependencies on Phase 1 ─────────────────────────
+  logger.section('Phase 2 — Derived Data');
   await seedRolePermissions(prisma);
+  await seedSubscriptionPlans(prisma);
+  logger.success('Phase 2 complete');
 
-  // ── Done ───────────────────────────────────────────────────────────────────
+  // ── Phase 3: Optional demo data ───────────────────────────────────────────
+  logger.section('Phase 3 — Demo Data');
+  await seedDemoData(prisma);
+  logger.success('Phase 3 complete');
+
+  // ── Summary ───────────────────────────────────────────────────────────────
   logger.section('Seed Complete');
-  logger.success('All RBAC seed data applied successfully.');
+  logger.success('All seed data applied successfully.');
 }
 
 main()

@@ -32,8 +32,15 @@ const config: Config = {
   // Coverage
   collectCoverageFrom: [
     'src/modules/auth/**/*.ts',
+    'src/modules/authorization/**/*.ts',
+    'src/modules/organization/**/*.ts',
     '!src/modules/auth/**/__tests__/**',
+    '!src/modules/authorization/**/__tests__/**',
+    '!src/modules/organization/**/__tests__/**',
     '!src/modules/auth/index.ts',
+    '!src/modules/authorization/index.ts',
+    '!src/modules/authorization/constants/**',
+    '!src/modules/organization/index.ts',
   ],
   coverageDirectory: 'coverage',
   coverageReporters: ['text', 'lcov', 'html'],

@@ -22,7 +22,7 @@ interface FieldError {
 }
 
 function formatZodErrors(err: ZodError): FieldError[] {
-  return err.errors.map((e) => ({
+  return err.issues.map((e) => ({
     field:   e.path.join('.') || 'body',
     message: e.message,
   }));

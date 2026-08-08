@@ -49,8 +49,7 @@ export async function authenticate(
     payload = verifyAccessToken(token);
   } catch (err) {
     if (err instanceof AuthTokenError) {
-      const status = err.code === AuthErrorCode.TOKEN_EXPIRED ? 401 : 401;
-      res.status(status).json({
+      res.status(401).json({
         success: false,
         error: {
           code:    err.code,

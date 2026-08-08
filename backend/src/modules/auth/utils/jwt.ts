@@ -33,10 +33,8 @@ export class AuthTokenError extends Error {
 // ─── Access Token ─────────────────────────────────────────────────────────────
 
 export function signAccessToken(payload: AccessTokenPayload): string {
-  return jwt.sign(payload, env.JWT_ACCESS_SECRET, {
-    expiresIn: env.JWT_ACCESS_EXPIRES_IN as jwt.SignOptions['expiresIn'],
-    algorithm: 'HS256',
-  });
+  const expiresIn = (env.JWT_ACCESS_EXPIRES_IN || '15m') as jwt.SignOptions['expiresIn'] & string;
+  return jwt.sign(payload, env.JWT_ACCESS_SECRET, { expiresIn, algorithm: 'HS256' });
 }
 
 export function verifyAccessToken(token: string): AccessTokenPayload {
@@ -73,10 +71,8 @@ export function verifyAccessToken(token: string): AccessTokenPayload {
 // ─── Refresh Token ────────────────────────────────────────────────────────────
 
 export function signRefreshToken(payload: RefreshTokenPayload): string {
-  return jwt.sign(payload, env.JWT_REFRESH_SECRET, {
-    expiresIn: env.JWT_REFRESH_EXPIRES_IN as jwt.SignOptions['expiresIn'],
-    algorithm: 'HS256',
-  });
+  const expiresIn = (env.JWT_REFRESH_EXPIRES_IN || '7d') as jwt.SignOptions['expiresIn'] & string;
+  return jwt.sign(payload, env.JWT_REFRESH_SECRET, { expiresIn, algorithm: 'HS256' });
 }
 
 export function verifyRefreshToken(token: string): RefreshTokenPayload {
