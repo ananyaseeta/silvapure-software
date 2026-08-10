@@ -21,6 +21,8 @@ import { AuthTokenError } from './modules/auth';
 import { AuthorizationError } from './modules/authorization';
 import { organizationRouter } from './modules/organization';
 import { OrganizationError }   from './modules/organization';
+import { userRouter }  from './modules/user';
+import { UserError }   from './modules/user';
 import { ZodError } from 'zod';
 
 // ─── Swagger definition ───────────────────────────────────────────────────────
@@ -254,6 +256,7 @@ export function createApp(): express.Application {
   // ── Routes ───────────────────────────────────────────────────────────────
   app.use('/api/auth',          authMutationLimiter, authRouter);
   app.use('/api/organizations', organizationRouter);
+  app.use('/api/users',         userRouter);
 
   // ── 404 handler ──────────────────────────────────────────────────────────
   app.use((_req: Request, res: Response) => {
@@ -311,6 +314,15 @@ export function createApp(): express.Application {
 
     // Organization domain errors
     if (err instanceof OrganizationError) {
+      res.status(err.statusHint).json({
+        success: false,
+        error: { code: err.code, message: err.message },
+      });
+      return;
+    }
+
+    // User domain errors
+    if (err instanceof UserError) {
       res.status(err.statusHint).json({
         success: false,
         error: { code: err.code, message: err.message },
