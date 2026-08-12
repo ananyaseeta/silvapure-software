@@ -1,7 +1,3 @@
-/**
- * User Module Barrel
- */
-
 export { userRouter }    from './routes';
 export { UserService }   from './service';
 export { UserRepository } from './repository';

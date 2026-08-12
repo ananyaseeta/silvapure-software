@@ -1,13 +1,4 @@
-/**
- * User Module — Domain Types
- *
- * All interfaces, DTOs, and error types for the user module.
- * Prisma types are never exposed outside the repository layer.
- */
-
 import type { UserStatus, RoleCode } from '@prisma/client';
-
-// ─── Read projections ─────────────────────────────────────────────────────────
 
 export interface UserRoleRecord {
   roleId:   string;
@@ -29,7 +20,6 @@ export interface UserRecord {
   updatedAt:      Date;
 }
 
-/** Lightweight list projection used in paginated responses. */
 export interface UserSummary {
   id:             string;
   organizationId: string;
@@ -41,8 +31,6 @@ export interface UserSummary {
   roles:          RoleCode[];
   createdAt:      Date;
 }
-
-// ─── Write DTOs ───────────────────────────────────────────────────────────────
 
 export interface CreateUserDto {
   organizationId: string;
@@ -56,10 +44,10 @@ export interface CreateUserDto {
 }
 
 export interface UpdateUserDto {
-  firstName?:  string;
-  lastName?:   string | null;
-  phone?:      string | null;
-  jobTitle?:   string | null;
+  firstName?: string;
+  lastName?:  string | null;
+  phone?:     string | null;
+  jobTitle?:  string | null;
 }
 
 export interface UpdateUserStatusDto {
@@ -69,8 +57,6 @@ export interface UpdateUserStatusDto {
 export interface AssignRolesDto {
   roles: RoleCode[];
 }
-
-// ─── Pagination (shared with org module) ─────────────────────────────────────
 
 export interface UserPaginationParams {
   page:  number;
@@ -85,8 +71,6 @@ export interface UserPaginatedResult<T> {
   totalPages: number;
 }
 
-// ─── Error codes ─────────────────────────────────────────────────────────────
-
 export const UserErrorCode = {
   NOT_FOUND:          'USER_NOT_FOUND',
   EMAIL_TAKEN:        'USER_EMAIL_TAKEN',
@@ -97,8 +81,6 @@ export const UserErrorCode = {
 } as const;
 
 export type UserErrorCode = (typeof UserErrorCode)[keyof typeof UserErrorCode];
-
-// ─── Domain error ─────────────────────────────────────────────────────────────
 
 export class UserError extends Error {
   public readonly code:       UserErrorCode;

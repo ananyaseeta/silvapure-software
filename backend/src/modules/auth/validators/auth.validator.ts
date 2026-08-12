@@ -1,14 +1,3 @@
-/**
- * Auth Validators — Express middleware wrappers around Zod schemas
- *
- * Each validator parses req.body against its Zod schema.
- * On failure it responds immediately with a structured 422 containing
- * all field-level errors. On success it calls next().
- *
- * These are separate from the controller so the route layer can compose them
- * independently of handler logic.
- */
-
 import type { Request, Response, NextFunction } from 'express';
 import type { ZodSchema, ZodError } from 'zod';
 import { loginSchema } from '../dto/login.dto';

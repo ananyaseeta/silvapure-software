@@ -1,20 +1,3 @@
-/**
- * Auth Routes
- *
- * All routes are prefixed /api/auth by the app-level router mount.
- *
- * Public routes  (no authentication required):
- *   POST /login
- *   POST /refresh
- *   POST /logout
- *   POST /forgot-password
- *   POST /reset-password
- *
- * Protected routes (authenticate middleware required):
- *   POST /change-password
- *   GET  /me
- */
-
 import { Router } from 'express';
 import rateLimit from 'express-rate-limit';
 import { authenticate } from '../middleware/authenticate.middleware';
@@ -24,19 +7,10 @@ import {
   validateForgotPassword,
   validateResetPassword,
 } from '../validators/auth.validator';
-import {
-  login,
-  refresh,
-  logout,
-  forgotPassword,
-  resetPassword,
-  changePassword,
-  me,
-} from '../controllers/auth.controller';
+import { login, refresh, logout, forgotPassword, resetPassword, changePassword, me } from '../controllers/auth.controller';
 
 export const authRouter = Router();
 
-/** Tighter limiter specifically for token refresh (higher request volume, lower risk). */
 const refreshLimiter = rateLimit({
   windowMs:        5 * 60 * 1000,
   max:             60,
@@ -73,19 +47,12 @@ const refreshLimiter = rateLimit({
  *               email:
  *                 type: string
  *                 format: email
- *                 example: operator@silvapure.io
  *               password:
  *                 type: string
  *                 format: password
- *                 example: "Str0ng!Pass"
  *     responses:
  *       200:
  *         description: Login successful
- *         headers:
- *           Set-Cookie:
- *             description: silvapure_refresh httpOnly cookie
- *             schema:
- *               type: string
  *         content:
  *           application/json:
  *             schema:
@@ -167,14 +134,9 @@ authRouter.post('/forgot-password', validateForgotPassword, forgotPassword);
  *             type: object
  *             required: [token, newPassword, confirmPassword]
  *             properties:
- *               token:
- *                 type: string
- *               newPassword:
- *                 type: string
- *                 format: password
- *               confirmPassword:
- *                 type: string
- *                 format: password
+ *               token:           { type: string }
+ *               newPassword:     { type: string, format: password }
+ *               confirmPassword: { type: string, format: password }
  *     responses:
  *       200:
  *         description: Password reset successfully
@@ -201,15 +163,9 @@ authRouter.post('/reset-password', validateResetPassword, resetPassword);
  *             type: object
  *             required: [currentPassword, newPassword, confirmPassword]
  *             properties:
- *               currentPassword:
- *                 type: string
- *                 format: password
- *               newPassword:
- *                 type: string
- *                 format: password
- *               confirmPassword:
- *                 type: string
- *                 format: password
+ *               currentPassword: { type: string, format: password }
+ *               newPassword:     { type: string, format: password }
+ *               confirmPassword: { type: string, format: password }
  *     responses:
  *       200:
  *         description: Password changed successfully
@@ -218,12 +174,7 @@ authRouter.post('/reset-password', validateResetPassword, resetPassword);
  *       422:
  *         $ref: '#/components/responses/ValidationError'
  */
-authRouter.post(
-  '/change-password',
-  authenticate,
-  validateChangePassword,
-  changePassword,
-);
+authRouter.post('/change-password', authenticate, validateChangePassword, changePassword);
 
 /**
  * @swagger

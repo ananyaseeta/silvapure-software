@@ -1,11 +1,4 @@
-/**
- * Organization Repository
- *
- * Single point of contact between the organization module and the database.
- * No business logic — only data access. Maps Prisma rows to domain types.
- */
-
-import type { PrismaClient } from '@prisma/client';
+import type { PrismaClient, OrganizationStatus } from '@prisma/client';
 import type {
   OrganizationRecord,
   OrganizationSummary,
@@ -15,39 +8,20 @@ import type {
   PaginationParams,
   PaginatedResult,
 } from './types';
-import type { OrganizationStatus } from '@prisma/client';
-
-// ─── Selector for full organization record ────────────────────────────────────
 
 const FULL_SELECT = {
-  id:               true,
-  organizationCode: true,
-  legalName:        true,
-  displayName:      true,
-  email:            true,
-  phone:            true,
-  website:          true,
-  status:           true,
-  industryTypeId:   true,
-  createdAt:        true,
-  updatedAt:        true,
-  industryType: {
-    select: {
-      id:          true,
-      name:        true,
-      description: true,
-    },
-  },
+  id: true, organizationCode: true, legalName: true, displayName: true,
+  email: true, phone: true, website: true, status: true,
+  industryTypeId: true, createdAt: true, updatedAt: true,
+  industryType: { select: { id: true, name: true, description: true } },
 } as const;
 
 export class OrganizationRepository {
   constructor(private readonly prisma: PrismaClient) {}
 
-  // ── Industry Types ──────────────────────────────────────────────────────────
-
   async findAllIndustryTypes(): Promise<IndustryTypeRecord[]> {
     return this.prisma.industryType.findMany({
-      select: { id: true, name: true, description: true },
+      select:  { id: true, name: true, description: true },
       orderBy: { name: 'asc' },
     });
   }
@@ -59,20 +33,12 @@ export class OrganizationRepository {
     });
   }
 
-  // ── Organizations ───────────────────────────────────────────────────────────
-
   async findById(id: string): Promise<OrganizationRecord | null> {
-    return this.prisma.organization.findUnique({
-      where:  { id },
-      select: FULL_SELECT,
-    });
+    return this.prisma.organization.findUnique({ where: { id }, select: FULL_SELECT });
   }
 
   async findByCode(code: string): Promise<OrganizationRecord | null> {
-    return this.prisma.organization.findUnique({
-      where:  { organizationCode: code },
-      select: FULL_SELECT,
-    });
+    return this.prisma.organization.findUnique({ where: { organizationCode: code }, select: FULL_SELECT });
   }
 
   async findAll(
@@ -89,32 +55,26 @@ export class OrganizationRepository {
       this.prisma.organization.findMany({
         where,
         select: {
-          id:               true,
-          organizationCode: true,
-          legalName:        true,
-          displayName:      true,
-          status:           true,
-          createdAt:        true,
-          industryType:     { select: { name: true } },
+          id: true, organizationCode: true, legalName: true, displayName: true,
+          status: true, createdAt: true,
+          industryType: { select: { name: true } },
         },
         orderBy: { createdAt: 'desc' },
-        skip:    (params.page - 1) * params.limit,
-        take:    params.limit,
+        skip: (params.page - 1) * params.limit,
+        take: params.limit,
       }),
     ]);
 
-    const data: OrganizationSummary[] = rows.map((r) => ({
-      id:               r.id,
-      organizationCode: r.organizationCode,
-      legalName:        r.legalName,
-      displayName:      r.displayName,
-      status:           r.status,
-      industryType:     r.industryType.name,
-      createdAt:        r.createdAt,
-    }));
-
     return {
-      data,
+      data: rows.map((r) => ({
+        id:               r.id,
+        organizationCode: r.organizationCode,
+        legalName:        r.legalName,
+        displayName:      r.displayName,
+        status:           r.status,
+        industryType:     r.industryType.name,
+        createdAt:        r.createdAt,
+      })),
       total,
       page:       params.page,
       limit:      params.limit,
@@ -139,7 +99,7 @@ export class OrganizationRepository {
 
   async update(id: string, dto: UpdateOrganizationDto): Promise<OrganizationRecord> {
     return this.prisma.organization.update({
-      where:  { id },
+      where: { id },
       data: {
         ...(dto.legalName   !== undefined ? { legalName:   dto.legalName }   : {}),
         ...(dto.displayName !== undefined ? { displayName: dto.displayName } : {}),
@@ -152,18 +112,13 @@ export class OrganizationRepository {
   }
 
   async updateStatus(id: string, status: OrganizationStatus): Promise<OrganizationRecord> {
-    return this.prisma.organization.update({
-      where:  { id },
-      data:   { status },
-      select: FULL_SELECT,
-    });
+    return this.prisma.organization.update({ where: { id }, data: { status }, select: FULL_SELECT });
   }
 
   async delete(id: string): Promise<void> {
     await this.prisma.organization.delete({ where: { id } });
   }
 
-  /** Returns the number of users belonging to an organization. */
   async countUsers(organizationId: string): Promise<number> {
     return this.prisma.user.count({ where: { organizationId } });
   }

@@ -1,9 +1,3 @@
-/**
- * Sensor Type Seeder
- * Upserts all sensor type definitions from data/sensorTypes.ts.
- * No dependencies — safe to run in Phase 1.
- */
-
 import { PrismaClient } from '@prisma/client';
 import { sensorTypes } from '../data/sensorTypes';
 import { upsertSensorType } from '../utils/upsert';
@@ -12,12 +6,10 @@ import { logger } from '../utils/logger';
 
 export async function seedSensorTypes(prisma: PrismaClient): Promise<void> {
   logger.info('Seeding sensor types…', { count: sensorTypes.length });
-
   await runInTransaction(prisma, 'SensorTypeSeeder', async (tx) => {
     for (const st of sensorTypes) {
       await upsertSensorType(tx as PrismaClient, st);
     }
   });
-
   logger.summary('SensorTypeSeeder', { upserted: sensorTypes.length });
 }

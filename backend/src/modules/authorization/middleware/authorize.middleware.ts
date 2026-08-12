@@ -1,57 +1,14 @@
-/**
- * Authorize Middleware
- *
- * Factory functions that return Express middleware enforcing permission-based
- * or role-based access control on protected routes.
- *
- * Usage (in a route file):
- *
- *   import { authenticate }    from '../auth';
- *   import { requirePermission, requireRole } from '../authorization';
- *
- *   router.get('/plants',
- *     authenticate,
- *     requirePermission('plant.read'),
- *     handler,
- *   );
- *
- *   router.delete('/plants/:id',
- *     authenticate,
- *     requireAllPermissions(['plant.delete', 'plant.read']),
- *     handler,
- *   );
- *
- * Pre-conditions:
- *   - `authenticate` middleware MUST run first so that `req.user` is present.
- *   - These helpers never call `authenticate` — they only consume `req.user`.
- *
- * On failure:
- *   - Calls next(AuthorizationError) which is caught by the global handler.
- *   - Never responds directly — keeps error shaping in one place.
- *
- * Swagger note:
- *   Routes using these helpers should include `security: [{ bearerAuth: [] }]`
- *   and document the required permission in their JSDoc.
- *
- * @module authorize.middleware
- */
-
 import type { Request, Response, NextFunction } from 'express';
 import type { RoleCode } from '@prisma/client';
-import { prisma }            from '../../../config/prisma';
-import { getRedisClient }    from '../config/redis';
+import { prisma }               from '../../../config/prisma';
+import { getRedisClient }       from '../config/redis';
 import { PermissionRepository } from '../repositories/permission.repository';
 import { RedisPermissionCache } from '../cache/permission.cache';
 import { PermissionService }    from '../services/permission.service';
 import { RoleService }          from '../services/role.service';
 import { AuthorizationError }   from '../errors/authorization.error';
-import {
-  AuthorizationErrorCode,
-  type AuthorizedRequest,
-} from '../types/authorization.types';
+import { AuthorizationErrorCode, type AuthorizedRequest } from '../types/authorization.types';
 import type { AuthenticatedRequest } from '../../auth/types/auth.types';
-
-// ─── Service factory (singleton per process) ──────────────────────────────────
 
 let _permissionService: PermissionService | null = null;
 let _roleService:       RoleService       | null = null;
@@ -67,13 +24,10 @@ function getPermissionService(): PermissionService {
 
 function getRoleService(): RoleService {
   if (!_roleService) {
-    const repo  = new PermissionRepository(prisma);
-    _roleService = new RoleService(repo);
+    _roleService = new RoleService(new PermissionRepository(prisma));
   }
   return _roleService;
 }
-
-// ─── Guard: req.user must be present ─────────────────────────────────────────
 
 function assertAuthenticated(req: Request): asserts req is AuthenticatedRequest {
   const r = req as Partial<AuthenticatedRequest>;
@@ -85,14 +39,7 @@ function assertAuthenticated(req: Request): asserts req is AuthenticatedRequest 
   }
 }
 
-// ─── requirePermission ────────────────────────────────────────────────────────
-
 /**
- * Requires the authenticated user to hold a single permission.
- *
- * @example
- * router.get('/alerts', authenticate, requirePermission('alert.read'), handler);
- *
  * @swagger
  * security:
  *   - bearerAuth: []
@@ -101,30 +48,18 @@ function assertAuthenticated(req: Request): asserts req is AuthenticatedRequest 
  *     $ref: '#/components/responses/Forbidden'
  */
 export function requirePermission(permissionCode: string) {
-  return async (
-    req:  Request,
-    _res: Response,
-    next: NextFunction,
-  ): Promise<void> => {
+  return async (req: Request, _res: Response, next: NextFunction): Promise<void> => {
     try {
       assertAuthenticated(req);
-      const userId = req.user.id;
-      const svc    = getPermissionService();
+      const svc     = getPermissionService();
+      const granted = await svc.hasPermission(req.user.id, permissionCode);
 
-      const granted = await svc.hasPermission(userId, permissionCode);
       if (!granted) {
-        return next(
-          new AuthorizationError(
-            AuthorizationErrorCode.MISSING_PERMISSION,
-            `Permission required: ${permissionCode}`,
-          ),
-        );
+        return next(new AuthorizationError(AuthorizationErrorCode.MISSING_PERMISSION, `Permission required: ${permissionCode}`));
       }
 
-      // Attach resolved permissions to request for downstream use
-      const { permissionCodes } = await svc.getUserPermissions(userId);
+      const { permissionCodes } = await svc.getUserPermissions(req.user.id);
       (req as AuthorizedRequest).permissions = permissionCodes;
-
       next();
     } catch (err) {
       next(err);
@@ -132,49 +67,19 @@ export function requirePermission(permissionCode: string) {
   };
 }
 
-// ─── requireAnyPermission ─────────────────────────────────────────────────────
-
-/**
- * Requires the authenticated user to hold AT LEAST ONE of the given permissions.
- *
- * @example
- * router.get('/reports',
- *   authenticate,
- *   requireAnyPermission(['report.read', 'report.export']),
- *   handler,
- * );
- *
- * @swagger
- * security:
- *   - bearerAuth: []
- * responses:
- *   403:
- *     $ref: '#/components/responses/Forbidden'
- */
 export function requireAnyPermission(permissionCodes: readonly string[]) {
-  return async (
-    req:  Request,
-    _res: Response,
-    next: NextFunction,
-  ): Promise<void> => {
+  return async (req: Request, _res: Response, next: NextFunction): Promise<void> => {
     try {
       assertAuthenticated(req);
-      const userId = req.user.id;
-      const svc    = getPermissionService();
+      const svc     = getPermissionService();
+      const granted = await svc.hasAnyPermission(req.user.id, permissionCodes);
 
-      const granted = await svc.hasAnyPermission(userId, permissionCodes);
       if (!granted) {
-        return next(
-          new AuthorizationError(
-            AuthorizationErrorCode.MISSING_PERMISSION,
-            `At least one of these permissions is required: ${permissionCodes.join(', ')}`,
-          ),
-        );
+        return next(new AuthorizationError(AuthorizationErrorCode.MISSING_PERMISSION, `At least one of these permissions is required: ${permissionCodes.join(', ')}`));
       }
 
-      const { permissionCodes: allCodes } = await svc.getUserPermissions(userId);
+      const { permissionCodes: allCodes } = await svc.getUserPermissions(req.user.id);
       (req as AuthorizedRequest).permissions = allCodes;
-
       next();
     } catch (err) {
       next(err);
@@ -182,49 +87,19 @@ export function requireAnyPermission(permissionCodes: readonly string[]) {
   };
 }
 
-// ─── requireAllPermissions ────────────────────────────────────────────────────
-
-/**
- * Requires the authenticated user to hold ALL of the given permissions.
- *
- * @example
- * router.delete('/devices/:id',
- *   authenticate,
- *   requireAllPermissions(['device.read', 'device.delete']),
- *   handler,
- * );
- *
- * @swagger
- * security:
- *   - bearerAuth: []
- * responses:
- *   403:
- *     $ref: '#/components/responses/Forbidden'
- */
 export function requireAllPermissions(permissionCodes: readonly string[]) {
-  return async (
-    req:  Request,
-    _res: Response,
-    next: NextFunction,
-  ): Promise<void> => {
+  return async (req: Request, _res: Response, next: NextFunction): Promise<void> => {
     try {
       assertAuthenticated(req);
-      const userId = req.user.id;
-      const svc    = getPermissionService();
+      const svc     = getPermissionService();
+      const granted = await svc.hasAllPermissions(req.user.id, permissionCodes);
 
-      const granted = await svc.hasAllPermissions(userId, permissionCodes);
       if (!granted) {
-        return next(
-          new AuthorizationError(
-            AuthorizationErrorCode.MISSING_PERMISSION,
-            `All of these permissions are required: ${permissionCodes.join(', ')}`,
-          ),
-        );
+        return next(new AuthorizationError(AuthorizationErrorCode.MISSING_PERMISSION, `All of these permissions are required: ${permissionCodes.join(', ')}`));
       }
 
-      const { permissionCodes: allCodes } = await svc.getUserPermissions(userId);
+      const { permissionCodes: allCodes } = await svc.getUserPermissions(req.user.id);
       (req as AuthorizedRequest).permissions = allCodes;
-
       next();
     } catch (err) {
       next(err);
@@ -232,47 +107,14 @@ export function requireAllPermissions(permissionCodes: readonly string[]) {
   };
 }
 
-// ─── requireRole ─────────────────────────────────────────────────────────────
-
-/**
- * Requires the authenticated user to hold a specific role.
- * Prefer permission-based checks over role checks for finer granularity.
- * Use role checks only when the entire role semantics are required
- * (e.g. "only ADMINs can access billing").
- *
- * @example
- * router.get('/admin/billing',
- *   authenticate,
- *   requireRole('ADMIN'),
- *   handler,
- * );
- *
- * @swagger
- * security:
- *   - bearerAuth: []
- * responses:
- *   403:
- *     $ref: '#/components/responses/Forbidden'
- */
 export function requireRole(roleCode: RoleCode) {
-  return async (
-    req:  Request,
-    _res: Response,
-    next: NextFunction,
-  ): Promise<void> => {
+  return async (req: Request, _res: Response, next: NextFunction): Promise<void> => {
     try {
       assertAuthenticated(req);
-      const userId = req.user.id;
-      const svc    = getRoleService();
+      const hasIt = await getRoleService().hasRole(req.user.id, roleCode);
 
-      const hasIt = await svc.hasRole(userId, roleCode);
       if (!hasIt) {
-        return next(
-          new AuthorizationError(
-            AuthorizationErrorCode.MISSING_ROLE,
-            `Role required: ${roleCode}`,
-          ),
-        );
+        return next(new AuthorizationError(AuthorizationErrorCode.MISSING_ROLE, `Role required: ${roleCode}`));
       }
 
       next();

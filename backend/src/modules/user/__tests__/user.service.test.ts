@@ -30,15 +30,13 @@ import type { UserRecord, UserSummary, UserPaginatedResult } from '../types';
 import { UserStatus, RoleCode } from '@prisma/client';
 import argon2 from 'argon2';
 
-const MockedRepo  = UserRepository as jest.MockedClass<typeof UserRepository>;
+const MockedRepo     = UserRepository as jest.MockedClass<typeof UserRepository>;
 const mockArgon2Hash = argon2.hash as jest.MockedFunction<typeof argon2.hash>;
 
-// ─── Restore argon2 mock before each test (jest.resetMocks clears it) ─────────
+// Restore argon2 mock before each test — jest.resetMocks clears it between tests
 beforeEach(() => {
   mockArgon2Hash.mockResolvedValue('$argon2id$hashed' as never);
 });
-
-const MockedRepo = UserRepository as jest.MockedClass<typeof UserRepository>;
 
 // ─── Fixtures ──────────────────────────────────────────────────────────────────
 

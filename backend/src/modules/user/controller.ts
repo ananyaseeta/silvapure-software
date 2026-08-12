@@ -1,37 +1,17 @@
-/**
- * User Controller
- *
- * HTTP concerns only — parses requests, delegates to UserService, shapes responses.
- * All business logic is in service.ts.
- *
- * Response format matches project standard:
- *   Success: { success: true, data: { ... } }
- *   Error:   next(err)  →  global handler in app.ts
- *
- * @module user/controller
- */
-
 import type { Request, Response, NextFunction } from 'express';
-import { UserService }     from './service';
-import { UserRepository }  from './repository';
-import { prisma }          from '../../config/prisma';
+import { UserService }    from './service';
+import { UserRepository } from './repository';
+import { prisma }         from '../../config/prisma';
 import type { AuthenticatedRequest } from '../auth/types/auth.types';
 import {
-  createUserSchema,
-  updateUserSchema,
-  updateUserStatusSchema,
-  assignRolesSchema,
-  listUsersQuerySchema,
-  userIdParamSchema,
+  createUserSchema, updateUserSchema, updateUserStatusSchema,
+  assignRolesSchema, listUsersQuerySchema, userIdParamSchema,
 } from './validation';
-
-// ─── Service factory ──────────────────────────────────────────────────────────
+import type { CreateUserDto, UpdateUserDto } from './types';
 
 function getService(): UserService {
   return new UserService(new UserRepository(prisma));
 }
-
-// ─── List users ───────────────────────────────────────────────────────────────
 
 /**
  * @swagger
@@ -57,7 +37,6 @@ function getService(): UserService {
  *       - in: query
  *         name: search
  *         schema: { type: string }
- *         description: Fuzzy search on first name, last name, or email
  *     responses:
  *       200:
  *         description: Paginated list of users
@@ -66,11 +45,7 @@ function getService(): UserService {
  *       403:
  *         $ref: '#/components/responses/Forbidden'
  */
-export async function listUsers(
-  req:  Request,
-  res:  Response,
-  next: NextFunction,
-): Promise<void> {
+export async function listUsers(req: Request, res: Response, next: NextFunction): Promise<void> {
   try {
     const query  = listUsersQuerySchema.parse(req.query);
     const result = await getService().list(
@@ -82,12 +57,8 @@ export async function listUsers(
       },
     );
     res.status(200).json({ success: true, data: result });
-  } catch (err) {
-    next(err);
-  }
+  } catch (err) { next(err); }
 }
-
-// ─── Get user ─────────────────────────────────────────────────────────────────
 
 /**
  * @swagger
@@ -105,28 +76,18 @@ export async function listUsers(
  *     responses:
  *       200:
  *         description: User details
- *       404:
- *         description: User not found
  *       401:
  *         $ref: '#/components/responses/Unauthorized'
  *       403:
  *         $ref: '#/components/responses/Forbidden'
  */
-export async function getUser(
-  req:  Request,
-  res:  Response,
-  next: NextFunction,
-): Promise<void> {
+export async function getUser(req: Request, res: Response, next: NextFunction): Promise<void> {
   try {
     const { id } = userIdParamSchema.parse(req.params);
     const user   = await getService().getById(id);
     res.status(200).json({ success: true, data: user });
-  } catch (err) {
-    next(err);
-  }
+  } catch (err) { next(err); }
 }
-
-// ─── Get current user (me) ────────────────────────────────────────────────────
 
 /**
  * @swagger
@@ -142,21 +103,13 @@ export async function getUser(
  *       401:
  *         $ref: '#/components/responses/Unauthorized'
  */
-export async function getMe(
-  req:  Request,
-  res:  Response,
-  next: NextFunction,
-): Promise<void> {
+export async function getMe(req: Request, res: Response, next: NextFunction): Promise<void> {
   try {
     const authedReq = req as AuthenticatedRequest;
     const user = await getService().getById(authedReq.user.id);
     res.status(200).json({ success: true, data: user });
-  } catch (err) {
-    next(err);
-  }
+  } catch (err) { next(err); }
 }
-
-// ─── Create user ──────────────────────────────────────────────────────────────
 
 /**
  * @swagger
@@ -175,8 +128,8 @@ export async function getMe(
  *             required: [organizationId, firstName, email, password]
  *             properties:
  *               organizationId: { type: string, format: uuid }
- *               firstName:      { type: string, example: Jane }
- *               lastName:       { type: string, example: Doe }
+ *               firstName:      { type: string }
+ *               lastName:       { type: string }
  *               email:          { type: string, format: email }
  *               password:       { type: string, format: password }
  *               phone:          { type: string }
@@ -196,14 +149,10 @@ export async function getMe(
  *       403:
  *         $ref: '#/components/responses/Forbidden'
  */
-export async function createUser(
-  req:  Request,
-  res:  Response,
-  next: NextFunction,
-): Promise<void> {
+export async function createUser(req: Request, res: Response, next: NextFunction): Promise<void> {
   try {
     const raw = createUserSchema.parse(req.body);
-    const dto = {
+    const dto: CreateUserDto = {
       organizationId: raw.organizationId,
       firstName:      raw.firstName,
       email:          raw.email,
@@ -215,12 +164,8 @@ export async function createUser(
     };
     const user = await getService().create(dto);
     res.status(201).json({ success: true, data: user });
-  } catch (err) {
-    next(err);
-  }
+  } catch (err) { next(err); }
 }
-
-// ─── Update user ──────────────────────────────────────────────────────────────
 
 /**
  * @swagger
@@ -235,38 +180,19 @@ export async function createUser(
  *         name: id
  *         required: true
  *         schema: { type: string, format: uuid }
- *     requestBody:
- *       required: true
- *       content:
- *         application/json:
- *           schema:
- *             type: object
- *             properties:
- *               firstName: { type: string }
- *               lastName:  { type: string, nullable: true }
- *               phone:     { type: string, nullable: true }
- *               jobTitle:  { type: string, nullable: true }
  *     responses:
  *       200:
  *         description: User updated
- *       404:
- *         description: User not found
- *       422:
- *         $ref: '#/components/responses/ValidationError'
  *       401:
  *         $ref: '#/components/responses/Unauthorized'
  *       403:
  *         $ref: '#/components/responses/Forbidden'
  */
-export async function updateUser(
-  req:  Request,
-  res:  Response,
-  next: NextFunction,
-): Promise<void> {
+export async function updateUser(req: Request, res: Response, next: NextFunction): Promise<void> {
   try {
     const { id } = userIdParamSchema.parse(req.params);
     const raw    = updateUserSchema.parse(req.body);
-    const dto = {
+    const dto: UpdateUserDto = {
       ...(raw.firstName !== undefined ? { firstName: raw.firstName } : {}),
       ...(raw.lastName  !== undefined ? { lastName:  raw.lastName }  : {}),
       ...(raw.phone     !== undefined ? { phone:     raw.phone }     : {}),
@@ -274,12 +200,8 @@ export async function updateUser(
     };
     const user = await getService().update(id, dto);
     res.status(200).json({ success: true, data: user });
-  } catch (err) {
-    next(err);
-  }
+  } catch (err) { next(err); }
 }
-
-// ─── Update user status ───────────────────────────────────────────────────────
 
 /**
  * @swagger
@@ -294,48 +216,29 @@ export async function updateUser(
  *         name: id
  *         required: true
  *         schema: { type: string, format: uuid }
- *     requestBody:
- *       required: true
- *       content:
- *         application/json:
- *           schema:
- *             type: object
- *             required: [status]
- *             properties:
- *               status: { type: string, enum: [ACTIVE, INACTIVE, SUSPENDED] }
  *     responses:
  *       200:
  *         description: Status updated
- *       422:
- *         description: Cannot change own status
  *       401:
  *         $ref: '#/components/responses/Unauthorized'
  *       403:
  *         $ref: '#/components/responses/Forbidden'
  */
-export async function updateUserStatus(
-  req:  Request,
-  res:  Response,
-  next: NextFunction,
-): Promise<void> {
+export async function updateUserStatus(req: Request, res: Response, next: NextFunction): Promise<void> {
   try {
     const { id }    = userIdParamSchema.parse(req.params);
     const dto       = updateUserStatusSchema.parse(req.body);
     const authedReq = req as AuthenticatedRequest;
     const user      = await getService().updateStatus(id, dto, authedReq.user.id);
     res.status(200).json({ success: true, data: user });
-  } catch (err) {
-    next(err);
-  }
+  } catch (err) { next(err); }
 }
-
-// ─── Assign roles ─────────────────────────────────────────────────────────────
 
 /**
  * @swagger
  * /api/users/{id}/roles:
  *   put:
- *     summary: Replace all roles on a user (full replacement, not additive)
+ *     summary: Replace all roles on a user
  *     tags: [Users]
  *     security:
  *       - bearerAuth: []
@@ -344,43 +247,22 @@ export async function updateUserStatus(
  *         name: id
  *         required: true
  *         schema: { type: string, format: uuid }
- *     requestBody:
- *       required: true
- *       content:
- *         application/json:
- *           schema:
- *             type: object
- *             required: [roles]
- *             properties:
- *               roles:
- *                 type: array
- *                 items: { type: string, enum: [ADMIN, PLANT_MANAGER, OPERATOR, ENVIRONMENTAL_OFFICER, VIEWER] }
  *     responses:
  *       200:
  *         description: Roles updated
- *       422:
- *         description: One or more role codes invalid
  *       401:
  *         $ref: '#/components/responses/Unauthorized'
  *       403:
  *         $ref: '#/components/responses/Forbidden'
  */
-export async function assignUserRoles(
-  req:  Request,
-  res:  Response,
-  next: NextFunction,
-): Promise<void> {
+export async function assignUserRoles(req: Request, res: Response, next: NextFunction): Promise<void> {
   try {
     const { id } = userIdParamSchema.parse(req.params);
     const dto    = assignRolesSchema.parse(req.body);
     const user   = await getService().assignRoles(id, dto);
     res.status(200).json({ success: true, data: user });
-  } catch (err) {
-    next(err);
-  }
+  } catch (err) { next(err); }
 }
-
-// ─── Delete user ──────────────────────────────────────────────────────────────
 
 /**
  * @swagger
@@ -398,26 +280,16 @@ export async function assignUserRoles(
  *     responses:
  *       204:
  *         description: User deleted
- *       422:
- *         description: Cannot delete own account
- *       404:
- *         description: User not found
  *       401:
  *         $ref: '#/components/responses/Unauthorized'
  *       403:
  *         $ref: '#/components/responses/Forbidden'
  */
-export async function deleteUser(
-  req:  Request,
-  res:  Response,
-  next: NextFunction,
-): Promise<void> {
+export async function deleteUser(req: Request, res: Response, next: NextFunction): Promise<void> {
   try {
     const { id }    = userIdParamSchema.parse(req.params);
     const authedReq = req as AuthenticatedRequest;
     await getService().delete(id, authedReq.user.id);
     res.status(204).send();
-  } catch (err) {
-    next(err);
-  }
+  } catch (err) { next(err); }
 }
