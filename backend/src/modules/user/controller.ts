@@ -2,6 +2,7 @@ import type { Request, Response, NextFunction } from 'express';
 import { UserService }    from './service';
 import { UserRepository } from './repository';
 import { prisma }         from '../../config/prisma';
+import { orgScopeService } from '../organization/scope.service';
 import type { AuthenticatedRequest } from '../auth/types/auth.types';
 import {
   createUserSchema, updateUserSchema, updateUserStatusSchema,
@@ -10,7 +11,7 @@ import {
 import type { CreateUserDto, UpdateUserDto } from './types';
 
 function getService(): UserService {
-  return new UserService(new UserRepository(prisma));
+  return new UserService(new UserRepository(prisma), orgScopeService);
 }
 
 /**
@@ -47,6 +48,7 @@ function getService(): UserService {
  */
 export async function listUsers(req: Request, res: Response, next: NextFunction): Promise<void> {
   try {
+    const authedReq = req as AuthenticatedRequest;
     const query  = listUsersQuerySchema.parse(req.query);
     const result = await getService().list(
       { page: query.page, limit: query.limit },
@@ -55,6 +57,7 @@ export async function listUsers(req: Request, res: Response, next: NextFunction)
         ...(query.status         !== undefined ? { status:         query.status }         : {}),
         ...(query.search         !== undefined ? { search:         query.search }         : {}),
       },
+      authedReq.user,
     );
     res.status(200).json({ success: true, data: result });
   } catch (err) { next(err); }
@@ -83,8 +86,9 @@ export async function listUsers(req: Request, res: Response, next: NextFunction)
  */
 export async function getUser(req: Request, res: Response, next: NextFunction): Promise<void> {
   try {
+    const authedReq = req as AuthenticatedRequest;
     const { id } = userIdParamSchema.parse(req.params);
-    const user   = await getService().getById(id);
+    const user   = await getService().getById(id, authedReq.user);
     res.status(200).json({ success: true, data: user });
   } catch (err) { next(err); }
 }
@@ -106,6 +110,7 @@ export async function getUser(req: Request, res: Response, next: NextFunction): 
 export async function getMe(req: Request, res: Response, next: NextFunction): Promise<void> {
   try {
     const authedReq = req as AuthenticatedRequest;
+    // getById without requester — user is always allowed to read their own profile
     const user = await getService().getById(authedReq.user.id);
     res.status(200).json({ success: true, data: user });
   } catch (err) { next(err); }
@@ -151,6 +156,7 @@ export async function getMe(req: Request, res: Response, next: NextFunction): Pr
  */
 export async function createUser(req: Request, res: Response, next: NextFunction): Promise<void> {
   try {
+    const authedReq = req as AuthenticatedRequest;
     const raw = createUserSchema.parse(req.body);
     const dto: CreateUserDto = {
       organizationId: raw.organizationId,
@@ -162,7 +168,7 @@ export async function createUser(req: Request, res: Response, next: NextFunction
       ...(raw.jobTitle !== undefined ? { jobTitle: raw.jobTitle } : {}),
       ...(raw.roles    !== undefined ? { roles:    raw.roles }    : {}),
     };
-    const user = await getService().create(dto);
+    const user = await getService().create(dto, authedReq.user);
     res.status(201).json({ success: true, data: user });
   } catch (err) { next(err); }
 }
@@ -190,6 +196,7 @@ export async function createUser(req: Request, res: Response, next: NextFunction
  */
 export async function updateUser(req: Request, res: Response, next: NextFunction): Promise<void> {
   try {
+    const authedReq = req as AuthenticatedRequest;
     const { id } = userIdParamSchema.parse(req.params);
     const raw    = updateUserSchema.parse(req.body);
     const dto: UpdateUserDto = {
@@ -198,7 +205,7 @@ export async function updateUser(req: Request, res: Response, next: NextFunction
       ...(raw.phone     !== undefined ? { phone:     raw.phone }     : {}),
       ...(raw.jobTitle  !== undefined ? { jobTitle:  raw.jobTitle }  : {}),
     };
-    const user = await getService().update(id, dto);
+    const user = await getService().update(id, dto, authedReq.user);
     res.status(200).json({ success: true, data: user });
   } catch (err) { next(err); }
 }
@@ -226,10 +233,10 @@ export async function updateUser(req: Request, res: Response, next: NextFunction
  */
 export async function updateUserStatus(req: Request, res: Response, next: NextFunction): Promise<void> {
   try {
+    const authedReq = req as AuthenticatedRequest;
     const { id }    = userIdParamSchema.parse(req.params);
     const dto       = updateUserStatusSchema.parse(req.body);
-    const authedReq = req as AuthenticatedRequest;
-    const user      = await getService().updateStatus(id, dto, authedReq.user.id);
+    const user      = await getService().updateStatus(id, dto, authedReq.user.id, authedReq.user);
     res.status(200).json({ success: true, data: user });
   } catch (err) { next(err); }
 }
@@ -257,9 +264,10 @@ export async function updateUserStatus(req: Request, res: Response, next: NextFu
  */
 export async function assignUserRoles(req: Request, res: Response, next: NextFunction): Promise<void> {
   try {
+    const authedReq = req as AuthenticatedRequest;
     const { id } = userIdParamSchema.parse(req.params);
     const dto    = assignRolesSchema.parse(req.body);
-    const user   = await getService().assignRoles(id, dto);
+    const user   = await getService().assignRoles(id, dto, authedReq.user.id, authedReq.user);
     res.status(200).json({ success: true, data: user });
   } catch (err) { next(err); }
 }
@@ -287,9 +295,9 @@ export async function assignUserRoles(req: Request, res: Response, next: NextFun
  */
 export async function deleteUser(req: Request, res: Response, next: NextFunction): Promise<void> {
   try {
-    const { id }    = userIdParamSchema.parse(req.params);
     const authedReq = req as AuthenticatedRequest;
-    await getService().delete(id, authedReq.user.id);
+    const { id }    = userIdParamSchema.parse(req.params);
+    await getService().delete(id, authedReq.user.id, authedReq.user);
     res.status(204).send();
   } catch (err) { next(err); }
 }

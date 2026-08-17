@@ -24,7 +24,7 @@ import type { AuthenticatedRequest } from '../auth/types/auth.types';
  */
 export async function requireOrgScope(
   req:  Request,
-  res:  Response,
+  _res: Response,
   next: NextFunction,
 ): Promise<void> {
   try {
