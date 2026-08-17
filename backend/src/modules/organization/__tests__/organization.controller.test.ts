@@ -71,7 +71,13 @@ function makeOrg(): OrganizationRecord {
 }
 
 function makeReq(overrides: Partial<Request> = {}): Request {
-  return { body: {}, params: {}, query: {}, ...overrides } as unknown as Request;
+  return {
+    body:   {},
+    params: {},
+    query:  {},
+    user:   { id: ORG_ID, email: 'req@test.io', organizationId: ORG_ID, status: 'ACTIVE' },
+    ...overrides,
+  } as unknown as Request;
 }
 
 function makeRes(): { res: Response; json: jest.Mock; status: jest.Mock; send: jest.Mock } {
@@ -151,7 +157,12 @@ describe('listOrganizations', () => {
     const m = buildMockService();
     const req = makeReq({ query: {} });
     await listOrganizations(req, makeRes().res, jest.fn());
-    expect(m.list).toHaveBeenCalledWith({ page: 1, limit: 20 }, expect.any(Object));
+    expect(m.list).toHaveBeenCalledWith(
+      { page: 1, limit: 20 },
+      expect.any(Object),
+      expect.any(String),
+      expect.any(String),
+    );
   });
 
   it('calls next(err) on service failure', async () => {

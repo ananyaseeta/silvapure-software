@@ -11,18 +11,39 @@ import type {
   PaginatedResult,
 } from './types';
 import { OrganizationError, OrganizationErrorCode } from './types';
+import type { OrgScopeService } from './scope.service';
 
 export class OrganizationService {
-  constructor(private readonly repo: OrganizationRepository) {}
+  constructor(
+    private readonly repo:      OrganizationRepository,
+    private readonly scopeSvc?: OrgScopeService,
+  ) {}
 
   async listIndustryTypes(): Promise<IndustryTypeRecord[]> {
     return this.repo.findAllIndustryTypes();
   }
 
+  /**
+   * Lists organizations.
+   *
+   * When a requesterId is supplied the list is scoped:
+   *   - ADMIN users see all organizations.
+   *   - All other users see only their own organization.
+   *
+   * When requesterId is omitted (internal/seed use) no scoping is applied.
+   */
   async list(
-    pagination: PaginationParams,
-    filters?: { status?: OrganizationStatus; industryTypeId?: string },
+    pagination:    PaginationParams,
+    filters?:      { status?: OrganizationStatus; industryTypeId?: string },
+    requesterId?:  string,
+    requesterOrgId?: string,
   ): Promise<PaginatedResult<OrganizationSummary>> {
+    if (requesterId && requesterOrgId && this.scopeSvc) {
+      const isAdmin = await this.scopeSvc.isAdmin(requesterId);
+      if (!isAdmin) {
+        return this.repo.findAll(pagination, filters, requesterOrgId);
+      }
+    }
     return this.repo.findAll(pagination, filters);
   }
 

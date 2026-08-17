@@ -7,6 +7,7 @@ import {
   PERM_ORGANIZATION_UPDATE,
   PERM_ORGANIZATION_DELETE,
 } from '../authorization/constants/permissions';
+import { requireOrgScope } from './scope.middleware';
 import {
   listIndustryTypes,
   listOrganizations,
@@ -28,10 +29,36 @@ export const organizationRouter = Router();
 
 organizationRouter.use(authenticate);
 
+// No scope guard needed — returns all industry types (reference data)
 organizationRouter.get('/industry-types', listIndustryTypes);
+
+// List is scoped inside OrganizationService.list() via OrgScopeService
 organizationRouter.get('/',    requirePermission(PERM_ORGANIZATION_READ),   listOrganizations);
+
+// Create is ADMIN-only by RBAC (organization.create) — no row-level guard needed
 organizationRouter.post('/',   requirePermission(PERM_ORGANIZATION_CREATE), createOrganization);
-organizationRouter.get('/:id', requirePermission(PERM_ORGANIZATION_READ),   getOrganization);
-organizationRouter.patch('/:id',        requirePermission(PERM_ORGANIZATION_UPDATE), updateOrganization);
-organizationRouter.patch('/:id/status', requirePermission(PERM_ORGANIZATION_UPDATE), updateOrganizationStatus);
-organizationRouter.delete('/:id',       requirePermission(PERM_ORGANIZATION_DELETE), deleteOrganization);
+
+// Row-level scope guard applied to all single-resource routes
+organizationRouter.get('/:id',
+  requirePermission(PERM_ORGANIZATION_READ),
+  requireOrgScope,
+  getOrganization,
+);
+
+organizationRouter.patch('/:id',
+  requirePermission(PERM_ORGANIZATION_UPDATE),
+  requireOrgScope,
+  updateOrganization,
+);
+
+organizationRouter.patch('/:id/status',
+  requirePermission(PERM_ORGANIZATION_UPDATE),
+  requireOrgScope,
+  updateOrganizationStatus,
+);
+
+organizationRouter.delete('/:id',
+  requirePermission(PERM_ORGANIZATION_DELETE),
+  requireOrgScope,
+  deleteOrganization,
+);

@@ -1,6 +1,7 @@
 import type { Request, Response, NextFunction } from 'express';
 import { OrganizationService }    from './service';
 import { OrganizationRepository } from './repository';
+import { orgScopeService }        from './scope.service';
 import { prisma }                  from '../../config/prisma';
 import {
   createOrganizationSchema,
@@ -10,9 +11,10 @@ import {
   idParamSchema,
 } from './validation';
 import type { CreateOrganizationDto, UpdateOrganizationDto } from './types';
+import type { AuthenticatedRequest } from '../auth/types/auth.types';
 
 function getService(): OrganizationService {
-  return new OrganizationService(new OrganizationRepository(prisma));
+  return new OrganizationService(new OrganizationRepository(prisma), orgScopeService);
 }
 
 /**
@@ -67,6 +69,7 @@ export async function listIndustryTypes(_req: Request, res: Response, next: Next
  */
 export async function listOrganizations(req: Request, res: Response, next: NextFunction): Promise<void> {
   try {
+    const authedReq = req as AuthenticatedRequest;
     const query  = listOrganizationsQuerySchema.parse(req.query);
     const result = await getService().list(
       { page: query.page, limit: query.limit },
@@ -74,6 +77,8 @@ export async function listOrganizations(req: Request, res: Response, next: NextF
         ...(query.status         !== undefined ? { status:         query.status }         : {}),
         ...(query.industryTypeId !== undefined ? { industryTypeId: query.industryTypeId } : {}),
       },
+      authedReq.user.id,
+      authedReq.user.organizationId,
     );
     res.status(200).json({ success: true, data: result });
   } catch (err) { next(err); }

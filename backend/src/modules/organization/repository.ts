@@ -44,10 +44,12 @@ export class OrganizationRepository {
   async findAll(
     params: PaginationParams,
     filters?: { status?: OrganizationStatus; industryTypeId?: string },
+    scopedOrgId?: string,
   ): Promise<PaginatedResult<OrganizationSummary>> {
     const where = {
-      ...(filters?.status         ? { status:         filters.status }         : {}),
-      ...(filters?.industryTypeId ? { industryTypeId: filters.industryTypeId } : {}),
+      ...(scopedOrgId                   ? { id:             scopedOrgId }       : {}),
+      ...(filters?.status               ? { status:         filters.status }    : {}),
+      ...(filters?.industryTypeId       ? { industryTypeId: filters.industryTypeId } : {}),
     };
 
     const [total, rows] = await Promise.all([
