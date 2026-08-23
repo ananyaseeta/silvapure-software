@@ -9,9 +9,19 @@ import {
   assignRolesSchema, listUsersQuerySchema, userIdParamSchema,
 } from './validation';
 import type { CreateUserDto, UpdateUserDto } from './types';
+import { auditService, AuditAction, AuditResource } from '../audit/audit.service';
 
 function getService(): UserService {
   return new UserService(new UserRepository(prisma), orgScopeService);
+}
+
+function meta(req: Request): { ipAddress?: string; userAgent?: string } {
+  const raw = (req.headers['x-forwarded-for'] as string | undefined) ?? req.socket?.remoteAddress;
+  const ip  = raw?.split(',')[0]?.trim();
+  return {
+    ...(ip        ? { ipAddress: ip }                               : {}),
+    ...(req.headers['user-agent'] ? { userAgent: req.headers['user-agent'] } : {}),
+  };
 }
 
 /**
@@ -170,6 +180,14 @@ export async function createUser(req: Request, res: Response, next: NextFunction
     };
     const user = await getService().create(dto, authedReq.user);
     res.status(201).json({ success: true, data: user });
+    void auditService.record({
+      userId:       authedReq.user.id,
+      action:       AuditAction.USER_CREATED,
+      resourceType: AuditResource.USER,
+      resourceId:   user.id,
+      newValues:    { email: user.email, firstName: user.firstName, organizationId: user.organizationId, roles: user.roles.map((r) => r.roleCode) },
+      ...meta(req),
+    });
   } catch (err) { next(err); }
 }
 
@@ -198,7 +216,8 @@ export async function updateUser(req: Request, res: Response, next: NextFunction
   try {
     const authedReq = req as AuthenticatedRequest;
     const { id } = userIdParamSchema.parse(req.params);
-    const raw    = updateUserSchema.parse(req.body);
+    const before  = await getService().getById(id, authedReq.user);
+    const raw     = updateUserSchema.parse(req.body);
     const dto: UpdateUserDto = {
       ...(raw.firstName !== undefined ? { firstName: raw.firstName } : {}),
       ...(raw.lastName  !== undefined ? { lastName:  raw.lastName }  : {}),
@@ -207,6 +226,15 @@ export async function updateUser(req: Request, res: Response, next: NextFunction
     };
     const user = await getService().update(id, dto, authedReq.user);
     res.status(200).json({ success: true, data: user });
+    void auditService.record({
+      userId:       authedReq.user.id,
+      action:       AuditAction.USER_UPDATED,
+      resourceType: AuditResource.USER,
+      resourceId:   id,
+      oldValues:    { firstName: before.firstName, lastName: before.lastName, phone: before.phone, jobTitle: before.jobTitle },
+      newValues:    { firstName: user.firstName, lastName: user.lastName, phone: user.phone, jobTitle: user.jobTitle },
+      ...meta(req),
+    });
   } catch (err) { next(err); }
 }
 
@@ -235,9 +263,19 @@ export async function updateUserStatus(req: Request, res: Response, next: NextFu
   try {
     const authedReq = req as AuthenticatedRequest;
     const { id }    = userIdParamSchema.parse(req.params);
+    const before    = await getService().getById(id, authedReq.user);
     const dto       = updateUserStatusSchema.parse(req.body);
     const user      = await getService().updateStatus(id, dto, authedReq.user.id, authedReq.user);
     res.status(200).json({ success: true, data: user });
+    void auditService.record({
+      userId:       authedReq.user.id,
+      action:       AuditAction.USER_STATUS_CHANGED,
+      resourceType: AuditResource.USER,
+      resourceId:   id,
+      oldValues:    { status: before.status },
+      newValues:    { status: user.status },
+      ...meta(req),
+    });
   } catch (err) { next(err); }
 }
 
@@ -266,9 +304,19 @@ export async function assignUserRoles(req: Request, res: Response, next: NextFun
   try {
     const authedReq = req as AuthenticatedRequest;
     const { id } = userIdParamSchema.parse(req.params);
-    const dto    = assignRolesSchema.parse(req.body);
-    const user   = await getService().assignRoles(id, dto, authedReq.user.id, authedReq.user);
+    const before  = await getService().getById(id, authedReq.user);
+    const dto     = assignRolesSchema.parse(req.body);
+    const user    = await getService().assignRoles(id, dto, authedReq.user.id, authedReq.user);
     res.status(200).json({ success: true, data: user });
+    void auditService.record({
+      userId:       authedReq.user.id,
+      action:       AuditAction.USER_ROLES_CHANGED,
+      resourceType: AuditResource.USER,
+      resourceId:   id,
+      oldValues:    { roles: before.roles.map((r) => r.roleCode) },
+      newValues:    { roles: user.roles.map((r) => r.roleCode) },
+      ...meta(req),
+    });
   } catch (err) { next(err); }
 }
 
@@ -297,7 +345,16 @@ export async function deleteUser(req: Request, res: Response, next: NextFunction
   try {
     const authedReq = req as AuthenticatedRequest;
     const { id }    = userIdParamSchema.parse(req.params);
+    const before    = await getService().getById(id, authedReq.user);
     await getService().delete(id, authedReq.user.id, authedReq.user);
     res.status(204).send();
+    void auditService.record({
+      userId:       authedReq.user.id,
+      action:       AuditAction.USER_DELETED,
+      resourceType: AuditResource.USER,
+      resourceId:   id,
+      oldValues:    { email: before.email, organizationId: before.organizationId, status: before.status },
+      ...meta(req),
+    });
   } catch (err) { next(err); }
 }

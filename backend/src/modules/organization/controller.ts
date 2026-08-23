@@ -12,9 +12,19 @@ import {
 } from './validation';
 import type { CreateOrganizationDto, UpdateOrganizationDto } from './types';
 import type { AuthenticatedRequest } from '../auth/types/auth.types';
+import { auditService, AuditAction, AuditResource } from '../audit/audit.service';
 
 function getService(): OrganizationService {
   return new OrganizationService(new OrganizationRepository(prisma), orgScopeService);
+}
+
+function meta(req: Request): { ipAddress?: string; userAgent?: string } {
+  const raw = (req.headers['x-forwarded-for'] as string | undefined) ?? req.socket?.remoteAddress;
+  const ip  = raw?.split(',')[0]?.trim();
+  return {
+    ...(ip        ? { ipAddress: ip }                               : {}),
+    ...(req.headers['user-agent'] ? { userAgent: req.headers['user-agent'] } : {}),
+  };
 }
 
 /**
@@ -150,6 +160,7 @@ export async function getOrganization(req: Request, res: Response, next: NextFun
  */
 export async function createOrganization(req: Request, res: Response, next: NextFunction): Promise<void> {
   try {
+    const authedReq = req as AuthenticatedRequest;
     const raw = createOrganizationSchema.parse(req.body);
     const dto: CreateOrganizationDto = {
       organizationCode: raw.organizationCode,
@@ -162,6 +173,14 @@ export async function createOrganization(req: Request, res: Response, next: Next
     };
     const org = await getService().create(dto);
     res.status(201).json({ success: true, data: org });
+    void auditService.record({
+      userId:       authedReq.user.id,
+      action:       AuditAction.ORG_CREATED,
+      resourceType: AuditResource.ORGANIZATION,
+      resourceId:   org.id,
+      newValues:    { organizationCode: org.organizationCode, legalName: org.legalName, status: org.status },
+      ...meta(req),
+    });
   } catch (err) { next(err); }
 }
 
@@ -202,7 +221,9 @@ export async function createOrganization(req: Request, res: Response, next: Next
  */
 export async function updateOrganization(req: Request, res: Response, next: NextFunction): Promise<void> {
   try {
+    const authedReq = req as AuthenticatedRequest;
     const { id } = idParamSchema.parse(req.params);
+    const before = await getService().getById(id);
     const raw    = updateOrganizationSchema.parse(req.body);
     const dto: UpdateOrganizationDto = {
       ...(raw.legalName   !== undefined ? { legalName:   raw.legalName }   : {}),
@@ -213,6 +234,15 @@ export async function updateOrganization(req: Request, res: Response, next: Next
     };
     const org = await getService().update(id, dto);
     res.status(200).json({ success: true, data: org });
+    void auditService.record({
+      userId:       authedReq.user.id,
+      action:       AuditAction.ORG_UPDATED,
+      resourceType: AuditResource.ORGANIZATION,
+      resourceId:   id,
+      oldValues:    { legalName: before.legalName, displayName: before.displayName, email: before.email, phone: before.phone, website: before.website },
+      newValues:    { legalName: org.legalName, displayName: org.displayName, email: org.email, phone: org.phone, website: org.website },
+      ...meta(req),
+    });
   } catch (err) { next(err); }
 }
 
@@ -248,10 +278,21 @@ export async function updateOrganization(req: Request, res: Response, next: Next
  */
 export async function updateOrganizationStatus(req: Request, res: Response, next: NextFunction): Promise<void> {
   try {
+    const authedReq = req as AuthenticatedRequest;
     const { id } = idParamSchema.parse(req.params);
-    const dto    = updateOrganizationStatusSchema.parse(req.body);
-    const org    = await getService().updateStatus(id, dto);
+    const before  = await getService().getById(id);
+    const dto     = updateOrganizationStatusSchema.parse(req.body);
+    const org     = await getService().updateStatus(id, dto);
     res.status(200).json({ success: true, data: org });
+    void auditService.record({
+      userId:       authedReq.user.id,
+      action:       AuditAction.ORG_STATUS_CHANGED,
+      resourceType: AuditResource.ORGANIZATION,
+      resourceId:   id,
+      oldValues:    { status: before.status },
+      newValues:    { status: org.status },
+      ...meta(req),
+    });
   } catch (err) { next(err); }
 }
 
@@ -280,8 +321,18 @@ export async function updateOrganizationStatus(req: Request, res: Response, next
  */
 export async function deleteOrganization(req: Request, res: Response, next: NextFunction): Promise<void> {
   try {
-    const { id } = idParamSchema.parse(req.params);
+    const authedReq = req as AuthenticatedRequest;
+    const { id }  = idParamSchema.parse(req.params);
+    const before  = await getService().getById(id);
     await getService().delete(id);
     res.status(204).send();
+    void auditService.record({
+      userId:       authedReq.user.id,
+      action:       AuditAction.ORG_DELETED,
+      resourceType: AuditResource.ORGANIZATION,
+      resourceId:   id,
+      oldValues:    { organizationCode: before.organizationCode, legalName: before.legalName },
+      ...meta(req),
+    });
   } catch (err) { next(err); }
 }

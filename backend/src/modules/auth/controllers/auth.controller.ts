@@ -1,5 +1,5 @@
 import type { Request, Response, NextFunction } from 'express';
-import { AuthService } from '../services/auth.service';
+import { AuthService, AuthServiceError, _getResetUserId } from '../services/auth.service';
 import { AuthRepository } from '../repositories/auth.repository';
 import { prisma } from '../../../config/prisma';
 import { env } from '../../../config/env';
@@ -9,6 +9,7 @@ import { changePasswordSchema } from '../dto/changePassword.dto';
 import { forgotPasswordSchema } from '../dto/forgotPassword.dto';
 import { resetPasswordSchema } from '../dto/resetPassword.dto';
 import type { AuthenticatedRequest } from '../types/auth.types';
+import { auditService, AuditAction, AuditResource } from '../../audit/audit.service';
 
 const REFRESH_COOKIE_NAME = 'silvapure_refresh';
 
@@ -30,12 +31,32 @@ function clearRefreshCookie(res: Response): void {
   res.clearCookie(REFRESH_COOKIE_NAME, { path: '/api/auth' });
 }
 
+function extractRequestMeta(req: Request): { ipAddress?: string; userAgent?: string } {
+  const raw = (req.headers['x-forwarded-for'] as string | undefined) ?? req.socket?.remoteAddress;
+  const ip  = raw?.split(',')[0]?.trim();
+  return {
+    ...(ip                      ? { ipAddress: ip }                               : {}),
+    ...(req.headers['user-agent'] ? { userAgent: req.headers['user-agent'] } : {}),
+  };
+}
+
 export async function login(req: Request, res: Response, next: NextFunction): Promise<void> {
+  const meta = extractRequestMeta(req);
   try {
     const dto    = loginSchema.parse(req.body);
     const result = await getService().login(dto);
 
     setRefreshCookie(res, result.refreshToken);
+
+    // Fire-and-forget: login success audit
+    void auditService.record({
+      userId:       result.user.id,
+      action:       AuditAction.LOGIN_SUCCESS,
+      resourceType: AuditResource.AUTH_SESSION,
+      resourceId:   result.user.id,
+      newValues:    { email: result.user.email },
+      ...meta,
+    });
 
     res.status(200).json({
       success: true,
@@ -51,6 +72,11 @@ export async function login(req: Request, res: Response, next: NextFunction): Pr
       },
     });
   } catch (err) {
+    // Failed login: userId is unknown, so we cannot write AuditLog (userId is required and non-nullable).
+    // Log to stderr only — schema constraint prevents DB audit entry without a valid userId.
+    if (err instanceof AuthServiceError) {
+      console.warn('[Audit] LOGIN_FAILED — cannot create AuditLog without valid userId:', req.body?.email ?? 'unknown');
+    }
     next(err);
   }
 }
@@ -76,10 +102,24 @@ export async function refresh(req: Request, res: Response, next: NextFunction): 
   }
 }
 
-export async function logout(_req: Request, res: Response, next: NextFunction): Promise<void> {
+export async function logout(req: Request, res: Response, next: NextFunction): Promise<void> {
   try {
+    const authedReq = req as Partial<AuthenticatedRequest>;
     getService().logout();
     clearRefreshCookie(res);
+
+    // Fire-and-forget: logout audit (only when authenticated)
+    if (authedReq.user?.id) {
+      const meta = extractRequestMeta(req);
+      void auditService.record({
+        userId:       authedReq.user.id,
+        action:       AuditAction.LOGOUT,
+        resourceType: AuditResource.AUTH_SESSION,
+        resourceId:   authedReq.user.id,
+        ...meta,
+      });
+    }
+
     res.status(200).json({ success: true, data: { message: 'Logged out successfully' } });
   } catch (err) {
     next(err);
@@ -104,7 +144,21 @@ export async function forgotPassword(req: Request, res: Response, next: NextFunc
 export async function resetPassword(req: Request, res: Response, next: NextFunction): Promise<void> {
   try {
     const dto = resetPasswordSchema.parse(req.body);
+    const userId = _getResetUserId(dto.token);
+
     await getService().resetPassword(dto);
+
+    if (userId) {
+      const m = extractRequestMeta(req);
+      void auditService.record({
+        userId,
+        action:       AuditAction.PASSWORD_RESET,
+        resourceType: AuditResource.USER,
+        resourceId:   userId,
+        ...m,
+      });
+    }
+
     res.status(200).json({ success: true, data: { message: 'Password has been reset successfully.' } });
   } catch (err) {
     next(err);
@@ -120,6 +174,16 @@ export async function changePassword(req: Request, res: Response, next: NextFunc
 
     // Force re-login after password change
     clearRefreshCookie(res);
+
+    // Fire-and-forget: password change audit
+    const meta = extractRequestMeta(req);
+    void auditService.record({
+      userId:       authedReq.user.id,
+      action:       AuditAction.PASSWORD_CHANGED,
+      resourceType: AuditResource.USER,
+      resourceId:   authedReq.user.id,
+      ...meta,
+    });
 
     res.status(200).json({
       success: true,

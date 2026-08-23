@@ -23,23 +23,35 @@ process.env['ARGON2_PARALLELISM']        = '1';
 jest.mock('../../../config/prisma', () => ({ prisma: {} }));
 jest.mock('../repository');
 jest.mock('../service');
+jest.mock('../scope.service', () => ({
+  orgScopeService: {
+    isAdmin:   jest.fn().mockResolvedValue(false),
+    canAccess: jest.fn().mockResolvedValue(true),
+  },
+}));
+jest.mock('../../audit/audit.service', () => ({
+  auditService: { record: jest.fn() },
+  AuditAction:  { ORG_CREATED: 'ORG_CREATED', ORG_UPDATED: 'ORG_UPDATED', ORG_STATUS_CHANGED: 'ORG_STATUS_CHANGED', ORG_DELETED: 'ORG_DELETED' },
+  AuditResource: { ORGANIZATION: 'Organization' },
+}));
 
 import type { Request, Response, NextFunction } from 'express';
 import { OrganizationStatus } from '@prisma/client';
 import {
-  listIndustryTypes,
-  listOrganizations,
-  getOrganization,
-  createOrganization,
-  updateOrganization,
-  updateOrganizationStatus,
-  deleteOrganization,
+  listIndustryTypes, listOrganizations, getOrganization, createOrganization,
+  updateOrganization, updateOrganizationStatus, deleteOrganization,
 } from '../controller';
 import { OrganizationService }  from '../service';
+import { auditService } from '../../audit/audit.service';
 import { OrganizationError, OrganizationErrorCode } from '../types';
 import type { OrganizationRecord, IndustryTypeRecord } from '../types';
 
-const MockedService = OrganizationService as jest.MockedClass<typeof OrganizationService>;
+const MockedService      = OrganizationService as jest.MockedClass<typeof OrganizationService>;
+const mockAuditRecord    = auditService.record as jest.Mock;
+
+beforeEach(() => {
+  mockAuditRecord.mockResolvedValue(undefined);
+});
 
 // ─── UUID fixtures (valid v4 UUIDs) ───────────────────────────────────────────
 const ORG_ID      = 'a1b2c3d4-e5f6-4789-a012-b34c56d78e90';

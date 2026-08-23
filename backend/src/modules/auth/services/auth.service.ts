@@ -35,6 +35,11 @@ interface ResetEntry {
 
 const resetTokenStore = new Map<string, ResetEntry>();
 
+/** Returns the userId associated with a reset token without consuming it. */
+export function _getResetUserId(token: string): string | undefined {
+  return resetTokenStore.get(token)?.userId;
+}
+
 export class AuthService {
   constructor(private readonly repo: AuthRepository) {}
 

@@ -21,6 +21,23 @@ process.env['ARGON2_PARALLELISM']        = '1';
 jest.mock('../../../config/prisma', () => ({ prisma: {} }));
 jest.mock('../repository');
 jest.mock('../service');
+jest.mock('../../organization/scope.service', () => ({
+  orgScopeService: {
+    isAdmin:   jest.fn().mockResolvedValue(false),
+    canAccess: jest.fn().mockResolvedValue(true),
+  },
+}));
+jest.mock('../../audit/audit.service', () => ({
+  auditService: { record: jest.fn() },
+  AuditAction: {
+    USER_CREATED:        'USER_CREATED',
+    USER_UPDATED:        'USER_UPDATED',
+    USER_DELETED:        'USER_DELETED',
+    USER_STATUS_CHANGED: 'USER_STATUS_CHANGED',
+    USER_ROLES_CHANGED:  'USER_ROLES_CHANGED',
+  },
+  AuditResource: { USER: 'User' },
+}));
 
 import type { Request, Response, NextFunction } from 'express';
 import { UserStatus, RoleCode } from '@prisma/client';
@@ -29,10 +46,16 @@ import {
   updateUser, updateUserStatus, assignUserRoles, deleteUser,
 } from '../controller';
 import { UserService }  from '../service';
+import { auditService } from '../../audit/audit.service';
 import { UserError, UserErrorCode } from '../types';
 import type { UserRecord } from '../types';
 
 const MockedService = UserService as jest.MockedClass<typeof UserService>;
+const mockAuditRecord = auditService.record as jest.Mock;
+
+beforeEach(() => {
+  mockAuditRecord.mockResolvedValue(undefined);
+});
 
 // ─── UUID fixtures ─────────────────────────────────────────────────────────────
 const USER_ID = 'b2c3d4e5-f6a7-4890-b123-c45d67e89f01';
