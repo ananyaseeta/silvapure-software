@@ -3,6 +3,9 @@
 ## Classification
 **Type B — Public real-world data**
 
+> **RAW DATA NOT INCLUDED** — License verification must be requested from UCI before redistribution.
+> Contact: ml-repository@ics.uci.edu | See "License Verification Required" section below.
+
 ---
 
 ## Official Name
@@ -99,14 +102,33 @@ This is the **most domain-relevant publicly available dataset for SILVAPURE rese
 - Stage-to-stage transfer efficiency features
 
 ## License
-**Uncertain — manual verification required.**
 
-The UCI ML Repository old-format site does not display an explicit license for this dataset. The new UCI site applies CC BY 4.0 to datasets it has formally relicensed, but this old dataset has not been verified to have that license assigned. The dataset has been used freely in academic research for decades.
+License verification must be requested from the UCI Machine Learning Repository because this dataset was donated in 1993 and its current redistribution license is not explicitly specified on the accessible UCI source.
 
-**Do not redistribute without verifying the current UCI terms for this specific dataset at the verified URL.**
+The UCI donation policy page confirms that **newly donated** datasets are assigned CC BY 4.0. However, this dataset predates that policy. No explicit license field is visible on the current accessible UCI page for dataset ID 207. The dataset has been freely used in academic research for over 30 years, but that does not constitute a verified redistribution grant.
+
+**Official source:** https://archive.ics.uci.edu/ml/datasets/Water
+**UCI ML Repository contact:** ml-repository@ics.uci.edu
+
+## License Verification Required
+
+Before publicly redistributing the raw UCI Water Treatment Plant dataset files, explicit confirmation must be obtained from the UCI Machine Learning Repository.
+
+**Action required:**
+1. Email ml-repository@ics.uci.edu
+2. Reference dataset ID 207 — "Water Treatment Plant" (donated 1993, Bejar/Cortes/Poch)
+3. Ask: Is this dataset covered under CC BY 4.0 or another explicit redistribution license?
+4. Record the response and update this document with the confirmed license
+
+**Until that confirmation is received:**
+- Raw dataset files (`water-treatment.data`, `water-treatment.names`) are NOT included in this repository
+- The dataset may be downloaded directly from the official UCI URL for local research use
+- Do not commit raw files here until the license response is documented
 
 ## Redistribution Restrictions
-UNVERIFIED. Treat as research-only until license is confirmed at source.
+**NOT CLEARED FOR REDISTRIBUTION** — pending license confirmation from UCI.
+
+The raw dataset files are intentionally excluded from this repository. See "License Verification Required" section above. Once UCI confirms the applicable license, update this document and add the raw files to `water-quality/raw/`.
 
 ## Recommended Use
 - Primary proxy dataset for Water Quality Prediction research (Phase 1)
