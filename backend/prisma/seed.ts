@@ -1,58 +1,55 @@
-/**
- * SILVAPURE — Seed Entry Point
- *
- * Invoked by Prisma via the "prisma.seed" script in package.json:
- *   "seed": "tsx prisma/seed.ts"
- *
- * Run manually:
- *   npx prisma db seed
- *
- * Seeder execution order is strict — dependencies must be satisfied:
- *
- *   Phase 2 — Task 1: RBAC
- *   ┌─────────────────────┐
- *   │  1. seedRoles        │  No dependencies
- *   │  2. seedPermissions  │  No dependencies (runs in parallel with roles)
- *   │  3. seedRolePerms    │  Requires roles + permissions to exist
- *   └─────────────────────┘
- *
- * Design principles:
- *   - Each seeder is independently transactional. A failure in one seeder
- *     rolls back only that seeder's changes.
- *   - Roles and permissions are independent and seeded in parallel.
- *   - Role-permission mappings are seeded last, after both complete.
- *   - No demo data, mock users, or test organizations are created here.
- *   - Idempotent: safe to run on a populated database.
- *   - Exit code 1 on any seeder failure — Prisma CLI will surface the error.
- */
-
 import { PrismaClient } from '@prisma/client';
 import { logger } from './seed/utils/logger';
-import { seedRoles } from './seed/seeders/roles.seed';
-import { seedPermissions } from './seed/seeders/permissions.seed';
-import { seedRolePermissions } from './seed/seeders/rolePermissions.seed';
+
+import { seedRoles }                 from './seed/seeders/roles.seed';
+import { seedPermissions }           from './seed/seeders/permissions.seed';
+import { seedIndustryTypes }         from './seed/seeders/industrySeeder';
+import { seedTreatmentTechnologies } from './seed/seeders/treatmentSeeder';
+import { seedSensorTypes }           from './seed/seeders/sensorSeeder';
+import { seedParameters }            from './seed/seeders/parameterSeeder';
+import { seedProtocolAdapters }      from './seed/seeders/protocolSeeder';
+import { seedModules }               from './seed/seeders/moduleSeeder';
+import { seedRules }                 from './seed/seeders/ruleSeeder';
+import { seedAIModels }              from './seed/seeders/aiSeeder';
+import { seedRolePermissions }       from './seed/seeders/rolePermissions.seed';
+import { seedSubscriptionPlans }     from './seed/seeders/subscriptionSeeder';
+import { seedDemoData }              from './seed/seeders/demoSeeder';
 
 const prisma = new PrismaClient();
 
 async function main(): Promise<void> {
-  logger.section('SILVAPURE Database Seed — Phase 2: RBAC');
-  logger.info('Environment', { nodeEnv: process.env.NODE_ENV ?? 'unset' });
+  logger.section('SILVAPURE — Database Seed');
+  logger.info('Environment', {
+    nodeEnv:  process.env['NODE_ENV'] ?? 'unset',
+    seedDemo: process.env['SEED_DEMO'] ?? 'false',
+  });
 
-  // ── Step 1: Seed roles and permissions in parallel ─────────────────────────
-  logger.section('Step 1 — Roles & Permissions');
+  logger.section('Phase 1 — Reference Data');
   await Promise.all([
     seedRoles(prisma),
     seedPermissions(prisma),
+    seedIndustryTypes(prisma),
+    seedTreatmentTechnologies(prisma),
+    seedSensorTypes(prisma),
+    seedParameters(prisma),
+    seedProtocolAdapters(prisma),
+    seedModules(prisma),
+    seedRules(prisma),
+    seedAIModels(prisma),
   ]);
+  logger.success('Phase 1 complete');
 
-  // ── Step 2: Seed role-permission mappings ──────────────────────────────────
-  // Must run after both roles and permissions exist in the database.
-  logger.section('Step 2 — Role-Permission Mappings');
+  logger.section('Phase 2 — Derived Data');
   await seedRolePermissions(prisma);
+  await seedSubscriptionPlans(prisma);
+  logger.success('Phase 2 complete');
 
-  // ── Done ───────────────────────────────────────────────────────────────────
+  logger.section('Phase 3 — Demo Data');
+  await seedDemoData(prisma);
+  logger.success('Phase 3 complete');
+
   logger.section('Seed Complete');
-  logger.success('All RBAC seed data applied successfully.');
+  logger.success('All seed data applied successfully.');
 }
 
 main()

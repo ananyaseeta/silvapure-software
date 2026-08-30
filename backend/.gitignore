@@ -1,5 +1,20 @@
-node_modules
-# Keep environment variables out of version control
-.env
+# Dependencies
+node_modules/
 
+# Environment variables — never commit real secrets
+.env
+.env.*
+!.env.example
+
+# Prisma generated client
 /src/generated/prisma
+
+# Build output
+dist/
+
+# Test coverage
+coverage/
+
+# Logs
+*.log
+npm-debug.log*

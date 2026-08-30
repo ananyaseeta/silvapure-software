@@ -1,12 +1,3 @@
-/**
- * Role Service
- *
- * Implements IRoleService.
- * Thin wrapper over the repository — role lookups are infrequent relative to
- * permission checks, so no caching layer is applied here. If role-check hot
- * paths emerge, add a separate role cache without touching this interface.
- */
-
 import type { RoleCode } from '@prisma/client';
 import type { IRoleService, IPermissionRepository, Role } from '../types/authorization.types';
 

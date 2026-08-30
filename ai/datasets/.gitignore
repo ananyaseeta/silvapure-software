@@ -1,0 +1,69 @@
+# Dataset .gitignore
+# Prevents accidental commits of restricted, uncleared, or very large dataset files.
+
+# -----------------------------------------------------------------------
+# UCI Water Treatment Plant — license verification pending
+# Raw files must NOT be committed until UCI confirms redistribution rights
+# Contact: ml-repository@ics.uci.edu — reference dataset ID 207
+# -----------------------------------------------------------------------
+water-treatment.data
+water-treatment.names
+
+# -----------------------------------------------------------------------
+# RESTRICTED datasets — must NOT be committed under any circumstances
+# -----------------------------------------------------------------------
+
+# SWaT — SUTD iTrust data usage agreement prohibits redistribution
+**/swat/
+*SWaT*
+*SWAT*
+swat_dataset/
+swat-dataset/
+
+# PHM Society challenge data — terms vary per year, most prohibit redistribution
+**/phm/
+PHM_*/
+phm_*/
+
+# -----------------------------------------------------------------------
+# Kaggle datasets — license unverified; require Kaggle account to download
+# Do not commit until license is confirmed per dataset
+# -----------------------------------------------------------------------
+**/kaggle-downloads/
+water-potability.csv
+water_potability.csv
+water-quality-kaggle.csv
+water_quality_kaggle.csv
+
+# -----------------------------------------------------------------------
+# Very large files — use Git LFS or external storage for files > 50MB
+# -----------------------------------------------------------------------
+*.parquet
+*.h5
+*.hdf5
+*.pkl
+*.pickle
+*.npy
+*.npz
+*.feather
+
+# -----------------------------------------------------------------------
+# Temporary / working files
+# -----------------------------------------------------------------------
+*.tmp
+*.temp
+/tmp/
+/scratch/
+/working/
+
+# Python notebook checkpoints and output caches
+.ipynb_checkpoints/
+__pycache__/
+*.pyc
+
+# -----------------------------------------------------------------------
+# OS artifacts
+# -----------------------------------------------------------------------
+.DS_Store
+Thumbs.db
+desktop.ini

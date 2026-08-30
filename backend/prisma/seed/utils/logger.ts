@@ -1,9 +1,3 @@
-/**
- * Seed Logger
- * Lightweight structured console logger for seed operations.
- * No external dependencies — keeps the seed environment minimal.
- */
-
 const RESET  = '\x1b[0m';
 const GREEN  = '\x1b[32m';
 const YELLOW = '\x1b[33m';
@@ -35,9 +29,7 @@ export const logger = {
     console.error(`${RED}[SEED]${RESET} ${DIM}${timestamp()}${RESET} ✖ ${message}`);
     if (err instanceof Error) {
       console.error(`${RED}       ${err.message}${RESET}`);
-      if (err.stack) {
-        console.error(`${DIM}${err.stack}${RESET}`);
-      }
+      if (err.stack) console.error(`${DIM}${err.stack}${RESET}`);
     } else if (err !== undefined) {
       console.error(`${RED}       ${String(err)}${RESET}`);
     }

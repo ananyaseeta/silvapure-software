@@ -1,37 +1,26 @@
-/**
- * HTTP Server Entry Point
- *
- * Creates the Express app and binds it to a TCP port.
- * Handles graceful shutdown on SIGTERM/SIGINT.
- */
-
 import { createApp } from './app';
 import { env } from './config/env';
 import { prisma } from './config/prisma';
+import { closeRedisClient } from './modules/authorization/config/redis';
 
 const app    = createApp();
 const server = app.listen(env.PORT, () => {
-  console.log(
-    `[Server] SILVAPURE API running on port ${env.PORT} (${env.NODE_ENV})`,
-  );
+  console.log(`[Server] SILVAPURE API running on port ${env.PORT} (${env.NODE_ENV})`);
   if (env.NODE_ENV !== 'production') {
-    console.log(`[Server] Swagger UI  → http://localhost:${env.PORT}/api/docs`);
+    console.log(`[Server] Swagger UI → http://localhost:${env.PORT}/api/docs`);
   }
 });
-
-// ─── Graceful shutdown ────────────────────────────────────────────────────────
 
 async function shutdown(signal: string): Promise<void> {
   console.log(`\n[Server] ${signal} received — shutting down gracefully`);
 
   server.close(async () => {
     console.log('[Server] HTTP server closed');
-    await prisma.$disconnect();
-    console.log('[Server] Database connection closed');
+    await Promise.all([prisma.$disconnect(), closeRedisClient()]);
+    console.log('[Server] Database and Redis connections closed');
     process.exit(0);
   });
 
-  // Force exit after 10 s if connections are not draining
   setTimeout(() => {
     console.error('[Server] Forced exit after timeout');
     process.exit(1);
