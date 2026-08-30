@@ -1,5 +1,12 @@
 # SWaT — Secure Water Treatment Dataset
 
+## Classification
+**Type B — Real data (operational water treatment testbed)**
+
+**Data restriction:** Raw SWaT files require a signed data usage agreement with SUTD iTrust and must NOT be committed to this repository. This document contains access instructions and dataset description only.
+
+---
+
 ## Official Name
 SWaT (Secure Water Treatment) Dataset
 
@@ -16,8 +23,10 @@ Real (collected from an operational water treatment testbed — a scaled-down bu
 Water treatment — multi-stage process including ultrafiltration, reverse osmosis, dechlorination, UV sterilisation, and chemical dosing. The SWaT testbed is a real operational facility, not a simulation.
 
 ## Number of Records
-- Normal operation: approximately 496,800 records (7 days of continuous operation at 1-second intervals)
+- Normal operation: approximately 496,800 records (7 days at 1-second intervals)
 - Attack scenarios: approximately 449,919 records (4 days including 36 attack scenarios)
+
+**Verification status:** These counts are derived from published academic papers describing SWaT. They have NOT been verified against the raw dataset files, which require a signed data usage agreement to access. Mark as LITERATURE-DERIVED until raw data access is obtained.
 
 ## Features
 51 sensor and actuator readings across 6 treatment stages:
@@ -71,22 +80,27 @@ For anomaly detection: the attack instances are the anomalies.
 ## ACCESS RESTRICTIONS — CRITICAL
 
 **This dataset CANNOT be downloaded without a formal data usage agreement.**
+**Raw SWaT data files must NOT be committed to this repository under any circumstances.**
 
-### Access Process:
-1. Visit https://itrust.sutd.edu.sg/itrust-labs_datasets/dataset_info/
-2. Complete the dataset request form
-3. Provide: name, affiliation, intended use, institution
+### Why This Data Must Not Be Committed
+The iTrust SUTD data usage agreement explicitly prohibits redistribution to third parties. Committing SWaT files to a public or semi-public GitHub repository would constitute a breach of that agreement.
+
+### Access Process
+1. Visit: https://itrust.sutd.edu.sg/itrust-labs_datasets/dataset_info/
+2. Complete the dataset request form on the iTrust website
+3. Provide: your name, institutional affiliation, and intended research use
 4. Agree to the SUTD iTrust data usage terms
 5. Access is typically granted via a secure download link after review
 
-### Restriction Summary:
-- Academic and research use only (as of last verification)
-- Cannot be redistributed to third parties
-- Must acknowledge SUTD iTrust in publications
-- Commercial use restrictions apply — verify current terms with iTrust
+### Confirmed Access Status (as of audit date)
+The iTrust SUTD dataset page was verified live (HTTP 200). The access request process described above is the current process as published on that page.
 
-**DO NOT commit any SWaT dataset files to this repository.**
-**DO NOT share dataset files outside your research team without iTrust approval.**
+### Restriction Summary
+- Research and academic use only
+- Cannot be redistributed to third parties
+- Must acknowledge SUTD iTrust in any publications using this data
+- Commercial use requires separate agreement — verify current terms with iTrust
+- **No raw data files in this repository**
 
 ## Preprocessing Required (for when access is obtained)
 - Remove first ~1,000 records (plant startup transient period)

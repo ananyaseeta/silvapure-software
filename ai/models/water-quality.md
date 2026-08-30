@@ -6,16 +6,19 @@ The Water Quality Prediction model forecasts effluent parameter values at the tr
 
 This is a **multivariate time-series regression problem**. One model per target parameter, or a multi-output model predicting several parameters simultaneously.
 
-**Primary prediction targets (effluent):**
-- BOD₅ (Biochemical Oxygen Demand, mg/L)
-- COD (Chemical Oxygen Demand, mg/L)
-- TSS (Total Suspended Solids, mg/L)
-- pH
-- DO (Dissolved Oxygen, mg/L) — where applicable at outlet
+**Reference discharge values (for context only — not universally applicable):**
 
----
+| Parameter | CPCB Schedule VI reference (inland water) | Status |
+|---|---|---|
+| BOD₅ | ≤ 30 mg/L | Corroborated by CPCB FAQ |
+| COD | ≤ 250 mg/L | From public summary — manual verification needed |
+| TSS | ≤ 100 mg/L | From public summary — manual verification needed |
+| pH | 6.0–9.0 | Consistent across multiple sources |
+| DO | ≥ 4.0 mg/L | In receiving water body |
 
-## Inputs
+**These values are general reference values only. The applicable limits for any SILVAPURE deployment depend on the industry category, state, site-specific consent conditions, and the current regulatory notification. Verify with a qualified environmental engineer and the relevant SPCB/CPCB before using these values for compliance decisions.**
+
+See `references/regulations.md` for the full qualification statement.
 
 ### From SILVAPURE Telemetry (production phase)
 - Inlet parameter readings: pH, BOD, COD, TSS, flow rate, temperature
@@ -33,15 +36,15 @@ This is a **multivariate time-series regression problem**. One model per target 
 
 ## Target Variables
 
-| Parameter | Unit | CPCB Standard (inland water) |
-|---|---|---|
-| BOD₅ | mg/L | ≤ 30 mg/L |
-| COD | mg/L | ≤ 250 mg/L |
-| TSS | mg/L | ≤ 100 mg/L |
-| pH | — | 6.0–9.0 |
-| DO | mg/L | ≥ 4.0 mg/L |
+| Parameter | Unit | Reference value (CPCB Schedule VI — inland water) | Verification |
+|---|---|---|---|
+| BOD₅ | mg/L | ≤ 30 mg/L | Corroborated by CPCB FAQ |
+| COD | mg/L | ≤ 250 mg/L | From public summary — manual verification needed |
+| TSS | mg/L | ≤ 100 mg/L | From public summary — manual verification needed |
+| pH | — | 6.0–9.0 | Consistent across multiple sources |
+| DO | mg/L | ≥ 4.0 mg/L (receiving water body) | From public summary |
 
-Note: Standards listed are from CPCB General Standards for discharge into inland surface water (Schedule VI, Environment Protection Rules, 1986 as amended). Verify current applicable standards with a qualified environmental engineer.
+**Important:** The values in the Reference column are general Schedule VI reference values, not universally applicable compliance thresholds. The limits that apply to any specific SILVAPURE deployment depend on the regulatory notification in force, the industry category, the state, and site-specific consent conditions issued by the relevant SPCB. Do not use these values for compliance decisions without verification. See `references/regulations.md` for the full qualification.
 
 ---
 

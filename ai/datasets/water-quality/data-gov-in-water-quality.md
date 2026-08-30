@@ -82,12 +82,17 @@ Depends on dataset and prediction task. Possible targets:
 
 ## License
 Government Open Data License — India (GODL)
-https://data.gov.in/government-open-data-license-india
 
-Key terms: Free to use, share, and adapt for any purpose including commercial, with attribution. Some datasets may have individual licensing terms — verify per dataset.
+**Note on license URL:** The previously documented URL `https://data.gov.in/government-open-data-license-india` returns a "Page Not Found" error as of the audit date. The GODL license text is notified via the Gazette of India. To read the current license text:
+- Search "Government Open Data License India" on https://data.gov.in/
+- Or refer to the OGD Platform India Terms of Use page
+
+**Core terms (based on the GODL as publicly described):** Free to use, share, copy, publish, distribute, transmit, and adapt for any purpose including commercial, provided attribution is given to the Government of India and the relevant ministry/department. Individual datasets on data.gov.in may display dataset-specific licensing terms that override the default GODL — always check the individual dataset's license field on its data.gov.in page before redistribution.
+
+**Do not make stronger licensing claims than the license text at source supports. Verify per dataset.**
 
 ## Redistribution Restrictions
-Generally freely redistributable under GODL with attribution. Verify the specific dataset's license on its data.gov.in page before redistribution.
+Verify per dataset by checking the individual license field on its data.gov.in page. The default GODL permits redistribution with attribution. Some third-party contributed datasets may have different terms. The GODL URL has moved — verify the current full license text at data.gov.in before redistribution.
 
 ## Recommended Use
 - Indian regulatory context validation

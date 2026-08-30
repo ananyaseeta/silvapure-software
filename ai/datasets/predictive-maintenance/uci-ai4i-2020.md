@@ -1,5 +1,10 @@
 # UCI AI4I 2020 Predictive Maintenance Dataset
 
+## Classification
+**Type C — Synthetic data (explicitly stated by dataset creators)**
+
+---
+
 ## Official Name
 AI4I 2020 Predictive Maintenance Dataset
 
@@ -19,20 +24,25 @@ Industrial machine/equipment predictive maintenance — generic manufacturing co
 10,000 data points
 
 ## Features
+**14 columns total:**
 - UID: unique identifier (1 to 10,000)
-- productID: product quality variant (L/M/H for low/medium/high quality)
+- productID: product quality variant (L/M/H — low/medium/high quality; categorical)
+- Type: same as productID (L/M/H)
 - air temperature [K]
 - process temperature [K]
 - rotational speed [rpm]
 - torque [Nm]
 - tool wear [min]
-- machine failure (target, binary)
-- Individual failure modes:
-  - TWF (Tool Wear Failure)
-  - HDF (Heat Dissipation Failure)
-  - PWF (Power Failure)
-  - OSF (Overstrain Failure)
-  - RNF (Random Failures)
+
+**Note on feature count:** The dataset has 14 total columns. Of these, 5 columns are continuous sensor/measurement features (air temperature, process temperature, rotational speed, torque, tool wear). The remaining columns are identifiers, a categorical quality code, the primary binary failure target, and 5 individual binary failure mode labels.
+
+Target columns (not model inputs):
+- machine failure (primary binary target)
+- TWF (Tool Wear Failure — binary)
+- HDF (Heat Dissipation Failure — binary)
+- PWF (Power Failure — binary)
+- OSF (Overstrain Failure — binary)
+- RNF (Random Failures — binary)
 
 ## Target Variable
 Primary: `machine failure` (binary: 0 = normal, 1 = failure)

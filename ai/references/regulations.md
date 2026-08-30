@@ -11,23 +11,34 @@ This document is provided for reference only to help the ML development team und
 ### Environment Protection Act, 1986
 - Enacted: 23 May 1986
 - Authority: Ministry of Environment, Forest and Climate Change (MoEFCC), Government of India
-- The foundational environmental law under which discharge standards are notified
 
-### Environment Protection Rules, 1986
-- Schedule VI contains General Standards for discharge of environmental pollutants into inland surface water, public sewers, land for irrigation, and marine coastal areas
-- Key parameters and general standards for inland surface water discharge:
+### Environment Protection Rules, 1986 — Schedule VI General Standards
 
-| Parameter | General Standard (Inland Surface Water) |
+**IMPORTANT QUALIFICATION ON ALL VALUES BELOW:**
+
+The values listed here are based on publicly available summaries of CPCB General Standards for discharge into inland surface water (Schedule VI, Environment Protection Rules). They are provided as a reference starting point only.
+
+**The applicable discharge limits for any specific SILVAPURE deployment depend on:**
+1. The specific regulatory notification currently in force (rules are amended periodically)
+2. The industry category of the facility (CPCB Schedule I sets industry-specific standards that may differ significantly from Schedule VI general standards)
+3. The state in which the facility operates (State Pollution Control Board conditions apply)
+4. Site-specific consent conditions in the facility's Consent to Operate (CTO) issued by the relevant SPCB — these may be more stringent than general standards
+5. Whether the facility is classified as Red, Orange, or Green category under CPCB norms
+6. Whether the discharge goes to inland surface water, a public sewer, land for irrigation, or marine coastal areas — different standards apply to each
+
+**DO NOT use these values for regulatory compliance without verifying the applicable current standard with a qualified environmental engineer and the relevant SPCB/CPCB.**
+
+General Schedule VI reference values for inland surface water discharge (from publicly available CPCB summaries — not directly verified from the current Official Gazette):
+
+| Parameter | Reference Value |
 |---|---|
 | pH | 6.0–9.0 |
 | BOD₅ | ≤ 30 mg/L |
 | COD | ≤ 250 mg/L |
-| TSS | ≤ 100 mg/L |
-| DO | ≥ 4.0 mg/L (in receiving water) |
-| Temperature | Shall not exceed 40°C |
-| Total Coliform | Not applicable to all industry types |
+| Total Suspended Solids | ≤ 100 mg/L |
+| Temperature | ≤ 40°C |
 
-> **Important:** The above values are from a public summary of general standards. Actual applicable standards depend on industry type, discharge location, and any site-specific consent conditions. Verify with CPCB/SPCB for each deployment.
+**Manual verification required:** The COD value of ≤ 250 mg/L was not directly confirmed from a live CPCB source during the audit. The BOD ≤ 30 mg/L threshold is corroborated by CPCB river-monitoring FAQs. All values require verification against the current Schedule VI text, available at: https://cpcb.nic.in/effluent-emission/
 
 ### Central Pollution Control Board (CPCB)
 - Website: https://cpcb.nic.in/

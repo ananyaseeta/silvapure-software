@@ -1,89 +1,102 @@
-# Kaggle Water Quality Datasets
+# Kaggle Water Quality Dataset (mssmartypants)
 
-## Overview and Important Provenance Warning
+## IMPORTANT CORRECTION NOTE
+A previous version of this document incorrectly stated "approximately 3,276 records" and listed 9 features. Those numbers belong to a **different Kaggle dataset** (the Water Potability dataset documented in `uci-water-quality-prediction.md`).
 
-Kaggle hosts several water quality datasets of varying provenance. **The datasets listed here have uncertain or unclear original sources.** Before using any Kaggle-hosted water quality dataset for production model development, trace the data back to its primary source.
+This document covers the **`mssmartypants/water-quality` Kaggle dataset**, which has:
+- **7,999 records**
+- **20 physicochemical features**
+- A binary safety target
 
-This document covers the most commonly referenced Kaggle water quality dataset.
+These are verified values from the dataset's published description.
 
 ---
 
-## Dataset: Water Quality and Potability
+## Classification
+**Type C — Synthetic/Simulated (provenance unverified) or Type B — Public real-world data of unclear origin**
 
-### Official Name (as listed on Kaggle)
-Water Quality
+---
 
-### Source on Kaggle
+## Official Name
+Water Quality (as listed by uploader mssmartypants on Kaggle)
+
+## Source
+Kaggle — uploaded by user mssmartypants
+
+## Verified URL
 https://www.kaggle.com/datasets/mssmartypants/water-quality
 
-### Dataset Type
-**UNCERTAIN** — The dataset description on Kaggle does not clearly identify a primary authoritative source. Some versions appear to be synthetically generated or heavily augmented. **Treat as synthetic/unverified unless primary source is confirmed.**
+**Access requirement:** Free Kaggle account required to download.
 
-### Domain
-Drinking water potability assessment — physicochemical parameters
+**Note on provenance:** The original data collection source is not clearly documented by the uploader. One published document associated with this dataset describes it as containing "7,999 samples of 20 different particulates, acting as the evidence for our model." No connection to a specific monitoring programme or regulatory database has been independently verified.
 
-### Number of Records
-Approximately 3,276 records (this is the commonly circulated version; exact count may vary by upload)
+## Dataset Type
+**UNCERTAIN — treat as provenance-unverified.**
 
-### Features
-- pH (0–14 scale)
-- Hardness (mg/L)
-- Solids (Total Dissolved Solids, ppm)
-- Chloramines (ppm)
-- Sulfate (mg/L)
-- Conductivity (µS/cm)
-- Organic Carbon (ppm)
-- Trihalomethanes (µg/L)
-- Turbidity (NTU)
+The original measurement programme behind this dataset is not documented. Do not assume it represents any specific real-world water body or regulatory programme.
 
-### Target Variable
-Potability (binary: 1 = potable, 0 = not potable)
+## Domain
+Drinking water / general water quality — 20 physicochemical parameters for water safety binary classification. **This is not a wastewater dataset.**
 
-**Critical limitation:** The binary potability classification is not grounded in a specific verified labelling methodology. The thresholds used to assign potability labels are NOT clearly documented in the Kaggle description. Do not use potability labels for regulatory compliance modelling.
+## Number of Records
+**7,999 records.** Verified from the dataset's published description and associated document.
 
-### Time-Series Characteristics
-None. Independent observations with no temporal ordering.
+## Features
+**20 physicochemical parameters.** The exact feature names vary across descriptions, but based on the dataset's published paper document they include a broad set of water quality indicators covering:
+- Standard physical parameters: pH, turbidity
+- Dissolved gases and oxygen-related
+- Chemical ions: aluminium, ammonia, arsenic, barium, cadmium, chloramine, chromium, copper, fluoride, bacteria, viruses, lead, nitrates, nitrites, mercury, perchlorate, radium, selenium, silver, uranium
 
-### SILVAPURE Model Applicability
+**Verification note:** The exact 20 feature names should be confirmed by downloading the dataset and inspecting the column headers, as the uploader's documentation is sparse.
+
+## Target Variable
+Binary safety classification: whether water is safe (1) or unsafe (0) for human consumption.
+
+**Critical limitation:** The labelling methodology is not documented. The thresholds and rules used to assign safe/unsafe labels are unknown, making this target unreliable for regulatory compliance validation.
+
+## Time-Series Characteristics
+None. Records are independent observations with no temporal ordering or timestamps.
+
+## SILVAPURE Model Applicability
+
 | Model | Applicable | Notes |
 |---|---|---|
-| Plant Health Scoring | No | No process-level or temporal data |
-| Water Quality Prediction | Limited | Feature reference only; labels unreliable |
-| Predictive Maintenance | No | No device data |
-| Anomaly Detection | Limited | Outlier detection on static readings only |
+| Plant Health Scoring | No | No process data, no temporal structure |
+| Water Quality Prediction | No (feature reference only) | Drinking water context; labels unreliable; no process data |
+| Predictive Maintenance | No | No device or temporal data |
+| Anomaly Detection | No (not recommended) | Static dataset only |
 
-### Why It Is Useful
-- Widely used in the ML community — easy to benchmark approaches against
-- Covers several parameters also measured by SILVAPURE sensors (pH, turbidity, conductivity)
-- Useful for rapid prototyping of feature preprocessing pipelines
+## Why It Is Sometimes Referenced
+- Covers a broad set of physicochemical parameters, some of which overlap with SILVAPURE's sensor schema
+- Used in educational ML classification benchmarks
+- Larger than the 3,276-record potability dataset — more data for prototyping
 
-### What It Cannot Be Used For
-- Any production model training where label quality matters
-- Regulatory compliance validation
-- Wastewater treatment prediction (drinking water data)
-- Time-series modelling
-- Claims about Indian or any specific regional standards
+## Limitations and What It Cannot Be Used For
+- **Drinking water data.** Completely different regulatory context from wastewater.
+- **Unverified labels.** Safe/unsafe classification methodology not documented.
+- **Unclear provenance.** Cannot make wastewater or CPCB compliance claims.
+- **No temporal structure.** Cannot be used for sequence modelling.
+- **Not recommended for SILVAPURE model training.**
 
-### License
-Kaggle datasets have individual licenses set by uploaders. The above dataset lists a license of **Unknown** or varies by version uploaded. **Do not redistribute or use commercially without verifying the original source license.**
+## Preprocessing Required (if used for prototyping only)
+- Check and handle missing values
+- Verify data types per column
+- Standard normalisation
 
-### Recommended Use
-- Exploratory data analysis and pipeline prototyping only
-- Not recommended for SILVAPURE model training due to unclear provenance
+## Feature Engineering Possibilities
+Limited. No temporal features. Basic feature interactions only.
 
----
+## License
+Kaggle-specific license set by uploader. **Verify the license tab on the Kaggle dataset page before any redistribution or commercial use.** Many Kaggle datasets list license as "Unknown."
 
-## General Guidance for Kaggle Water Quality Datasets
+## Redistribution Restrictions
+**Do not redistribute.** License is unverified. Original data source is unknown.
 
-When evaluating any Kaggle water quality dataset:
+## Recommended Use
+**Not recommended for SILVAPURE model training.** Listed for awareness and to prevent confusion with the 3,276-record Water Potability dataset documented in `uci-water-quality-prediction.md`.
 
-1. Check the "About" tab for a link to the original primary source
-2. If no primary source is listed, treat as provenance-unverified
-3. Check the license field — many Kaggle datasets are listed as "Unknown" which means redistribution rights are unclear
-4. Prefer datasets that trace to EPA, USGS, CPCB, or peer-reviewed research data
+## Note on Duplication
+The file `uci-water-quality-prediction.md` documents the **Water Potability dataset** (3,276 records, 9 features, different Kaggle URL). These are two distinct datasets. Do not merge them.
 
-## Preferred Alternatives
-For SILVAPURE development, the following are preferred over Kaggle-sourced water quality data:
-- UCI Water Treatment Plant (see `uci-water-treatment-plant.md`) — verified real data
-- EPA Water Quality Portal (see `epa-water-quality-portal.md`) — verified real data, public domain
-- data.gov.in datasets (see `data-gov-in-water-quality.md`) — India-specific, GODL licensed
+## Citation
+No authoritative primary citation. If referenced: "Kaggle Water Quality dataset by mssmartypants, downloaded from https://www.kaggle.com/datasets/mssmartypants/water-quality."

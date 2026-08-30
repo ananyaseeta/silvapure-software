@@ -1,5 +1,13 @@
 # PHM Society Data Challenge Datasets
 
+## Classification
+**Type B/C — Real industrial data (some challenges) or Simulated data (other challenges)**
+
+**This is a category-level placeholder document, not a specific dataset.**
+A specific PHM challenge year must be selected and documented separately before this source can be used in SILVAPURE research. Different challenge years have different data types, licenses, record counts, and redistribution restrictions.
+
+---
+
 ## Official Name
 PHM Society Data Challenge Datasets (various years)
 

@@ -1,97 +1,121 @@
 # UCI Water Treatment Plant Dataset
 
+## Classification
+**Type B — Public real-world data**
+
+---
+
 ## Official Name
 Water Treatment Plant (water-treatment.data)
 
 ## Official Source
 UCI Machine Learning Repository — Center for Machine Learning and Intelligent Systems, University of California Irvine
 
-## URL
-https://archive.ics.uci.edu/dataset/207/water+treatment+plant
+## Verified URL
+**Primary (verified working):**
+https://archive.ics.uci.edu/ml/datasets/Water
+
+**Note on URLs:** The new UCI ML Repository site uses numeric IDs in the format `archive.ics.uci.edu/dataset/<id>/`. The old-format URL above (`/ml/datasets/Water`) was verified live as of the audit date. The numeric ID for this dataset is listed in older literature as ID 207, but that path returns HTTP 404 on the new site. Use the `/ml/datasets/Water` path until the new-format URL is confirmed.
 
 ## Dataset Type
-Real (collected from an operational urban wastewater treatment plant)
+Real — collected from an operational urban wastewater treatment plant in a real city. This is not simulated or synthetic data.
 
 ## Domain
-Municipal wastewater treatment — biological treatment plant (activated sludge process)
+Municipal wastewater treatment — biological treatment (activated sludge process). This is the **only publicly available real-world operational wastewater treatment plant time-series dataset** among the candidate datasets in this repository.
+
+**Important:** This dataset is from a European municipal STP. It does not represent industrial ETP operations, pharmaceutical wastewater, textile effluent, or Indian regulatory conditions. These are real limitations — not guesses.
 
 ## Number of Records
-527 daily observations (spanning approximately 2 years of daily plant readings)
+**Approximately 527 daily observations** (approximately 2 years of daily plant readings).
+
+**Verification status:** This count appears consistently in published literature and the UCI dataset description, but the original source URL has moved. Consider it reliable but mark as LITERATURE-DERIVED until the new UCI page is confirmed live and the count is visible there.
 
 ## Features
-38 sensor/process measurements including:
-- Input stage: SS (suspended solids), SED, COND, PH, DBO, DQO, SS_S, SED_S, COND_S
-- Primary settler: SS_P, SED_P
-- Aeration tank: SS_A, SED_A, COND_A, PH_A, DBO_A, DQO_A, SS_S_A
-- Secondary settler: SS_D, SED_D, COND_D, PH_D, DBO_D, COD_D
-- Effluent: SS_E, SED_E, COND_E, PH_E, DBO_E, DQO_E
-- Recycling/return flows: several derived flow indicators
+38 sensor and process measurements across four treatment stages. Feature names in the raw file are coded (V1–V38 in some distributions). The mapping per UCI documentation:
 
-Note: Several features contain missing values (indicated by "?"). The dataset does not include timestamps in the standard distribution; daily ordering is implied.
+| Code range | Stage |
+|---|---|
+| V1–V8 | Inlet (raw wastewater) |
+| V9–V16 | Primary settler |
+| V17–V24 | Aeration tank (biological) |
+| V25–V32 | Secondary settler |
+| V33–V38 | Effluent (output) |
+
+Parameters include: Suspended Solids (SS), Sedimentation (SED), Conductivity (COND), pH, BOD (DBO in Spanish), COD (DQO), flow rates.
+
+**Missing values:** Indicated by `?` in the raw file. Approximately 15–30% of values are missing across features. This is a real characteristic of the data, not an error.
 
 ## Target Variable
-No single designated target. The dataset is used for:
-- Predicting effluent quality (DBO_E, DQO_E, SS_E) given inlet conditions
-- Fault/anomaly detection (non-normal operational states)
-- Process state classification
+No single designated target. Depending on the task:
+- Effluent quality prediction: DBO_E (effluent BOD), DQO_E (effluent COD), SS_E (effluent suspended solids)
+- Process state classification: operational state of the plant
+- Anomaly detection: no labels — unsupervised
 
 ## Time-Series Characteristics
 - Daily resolution
-- Sequential daily records — order matters
-- Short autocorrelation window (plant biological processes operate on 1–7 day cycles)
-- Missing values are not random; they often reflect sensor failure or maintenance periods
+- Records are in chronological order (row order = day order; no explicit timestamp column)
+- Approximately 2-year span
+- Short autocorrelation window (biological treatment cycles are 1–7 days)
+- Missing value clusters likely correspond to sensor faults or maintenance periods
 
 ## SILVAPURE Model Applicability
-| Model | Applicable | Notes |
-|---|---|---|
-| Plant Health Scoring | Yes (proxy) | Multi-stage process health indicators |
-| Water Quality Prediction | Yes (primary proxy) | Effluent parameter prediction |
-| Predictive Maintenance | Partial (proxy) | Missing value patterns can simulate sensor degradation |
-| Anomaly Detection | Yes (proxy) | Operational state anomalies |
+
+| Model | Applicable | Confidence | Notes |
+|---|---|---|---|
+| Plant Health Scoring | Yes — proxy | Medium | Multi-stage process measurements; no explicit health labels |
+| Water Quality Prediction | Yes — primary proxy | Medium-High | Effluent quality prediction is directly the intended use |
+| Predictive Maintenance | Partial — indirect proxy | Low | Missing value patterns can simulate sensor degradation |
+| Anomaly Detection | Yes — proxy | Medium | Unsupervised anomaly detection on real wastewater data |
 
 ## Why It Is Useful
-- One of very few publicly available real operational wastewater treatment datasets
-- Multi-stage process measurements (input → treatment → effluent) mirror SILVAPURE's treatment plant hierarchy
-- Long enough time series for sequence-based modelling approaches
-- Missing values provide realistic data quality scenarios
+This is the **most domain-relevant publicly available dataset for SILVAPURE research**. It provides:
+- Real operational data from a multi-stage wastewater treatment process
+- Input → treatment stage → effluent measurement chain that directly mirrors SILVAPURE's `TreatmentPlant` → `Sensor` → `Telemetry` hierarchy
+- Missing value patterns that make preprocessing pipelines realistic
+- A time-series structure suitable for lag-feature and sequence model development
 
-## What It Cannot Be Used For
-- Industrial or pharmaceutical wastewater (this is municipal STP data only)
-- Sub-daily or real-time modelling (daily resolution only)
-- Device-level predictive maintenance (no device-specific sensor health readings)
-- Direct regulatory threshold validation (units and thresholds are European, not necessarily Indian CPCB standards)
-- Cannot be treated as representative of all wastewater types
+## Limitations and What It Cannot Be Used For
+- **Daily resolution only.** Sub-daily or real-time process dynamics are not captured.
+- **European municipal STP.** Treatment configuration, feedstock, and regulatory thresholds differ from Indian ETP/STP facilities.
+- **No explicit anomaly labels.** Anomaly detection must be unsupervised.
+- **No device-level metadata.** Predictive maintenance requires device-specific features not present here.
+- **~2 years of data.** Insufficient to capture multi-year seasonal patterns.
+- **Not wastewater-specific for Indian regulatory thresholds.** Do not use parameter ranges as proxies for CPCB compliance without verifying applicable Indian standards.
 
 ## Preprocessing Required
-- Handle missing values: imputation (forward-fill, median, or KNN) depending on mechanism
-- Normalise/standardise all continuous features (different physical units)
-- Reconstruct temporal order before any sequence modelling
-- Verify unit consistency across features
-- Remove or flag observations with more than a threshold percentage of missing features
+1. Parse `?` as `NaN` on CSV load
+2. Sort by row order (chronological) — no timestamp column exists
+3. Impute missing values: forward-fill for gaps ≤ 4 records, median imputation for longer gaps (training-set statistics only)
+4. Exclude records where more than 30% of features are missing
+5. Normalise continuous features using training-set mean and std only
+6. For tabular models: build lag features (t-1, t-3, t-6, t-12, t-24)
+7. For sequence models: sliding window of length W (tune 7–30)
 
 ## Feature Engineering Possibilities
-- Rolling mean/std over 3, 7, 14-day windows for trend capture
-- Ratio features: DQO/DBO ratio (biodegradability indicator), SS removal efficiency
-- Lag features (t-1, t-3, t-7) for autoregressive models
-- Difference features (day-over-day change rates)
-- Process efficiency scores per treatment stage
+- Effluent removal efficiency ratios: (inlet_BOD - effluent_BOD) / inlet_BOD
+- DQO/DBO ratio (biodegradability index)
+- Rolling mean and std over 7, 14, 30-day windows
+- Day-over-day difference features
+- Stage-to-stage transfer efficiency features
 
 ## License
-UCI ML Repository standard terms — free for research and educational use. No explicit redistribution prohibition for the data files, but always verify at source before redistribution.
+**Uncertain — manual verification required.**
 
-> As of the date of this document, UCI ML Repository datasets are generally available under a Creative Commons Attribution 4.0 International license or similar open terms. Verify at https://archive.ics.uci.edu/dataset/207/water+treatment+plant before redistribution.
+The UCI ML Repository old-format site does not display an explicit license for this dataset. The new UCI site applies CC BY 4.0 to datasets it has formally relicensed, but this old dataset has not been verified to have that license assigned. The dataset has been used freely in academic research for decades.
+
+**Do not redistribute without verifying the current UCI terms for this specific dataset at the verified URL.**
 
 ## Redistribution Restrictions
-No known hard restriction on redistribution for research. Do not redistribute without attribution. Do not use for commercial purposes without verifying the UCI terms for this specific dataset.
+UNVERIFIED. Treat as research-only until license is confirmed at source.
 
 ## Recommended Use
-- Baseline development for Water Quality Prediction model
-- Feature engineering experimentation
-- Missing data handling strategy validation
-- Proxy for Plant Health multi-stage scoring
+- Primary proxy dataset for Water Quality Prediction research (Phase 1)
+- Preprocessing pipeline validation
+- Anomaly detection baseline development
+- Feature engineering pattern development
 
 ## Citation
 Bejar, J., Cortes, U., Poch, M. (1993). LINNEO+: A Classification Methodology for Ill-Structured Domains. Research Report, Llenguatges i Sistemes Informatics, Universitat Politecnica de Catalunya.
 
-UCI Repository citation:
-Dua, D. and Graff, C. (2019). UCI Machine Learning Repository. Irvine, CA: University of California, School of Information and Computer Science.
+UCI Repository standard citation:
+Dua, D. and Graff, C. (2019). UCI Machine Learning Repository. Irvine, CA: University of California, School of Information and Computer Science. http://archive.ics.uci.edu/ml

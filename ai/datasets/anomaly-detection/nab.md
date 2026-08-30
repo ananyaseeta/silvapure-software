@@ -1,5 +1,12 @@
 # NAB — Numenta Anomaly Benchmark
 
+## Classification
+**Type D — General ML benchmark dataset**
+
+NAB is a general-purpose time-series anomaly detection benchmark. It does NOT contain water treatment or wastewater data. Its role in SILVAPURE research is limited to providing an evaluation framework and methodology reference.
+
+---
+
 ## Official Name
 NAB (Numenta Anomaly Benchmark)
 
@@ -24,7 +31,9 @@ General-purpose time-series anomaly detection benchmark. Domains covered include
 **Important:** NAB does NOT contain water treatment or wastewater-specific data.
 
 ## Number of Records
-58 data files (time series). Individual files range from a few hundred to several thousand data points. Total: approximately 365,000 data points across all files.
+58 data files (time series). **Total: 365,551 data points** across all files. Individual files range from approximately 1,000 to 22,000 data points.
+
+**Verification status:** The count of 365,551 is cited in Lavin et al. (2015) and confirmed in independent published literature. Consider this verified.
 
 ## Features
 Each NAB file has a simple structure:
