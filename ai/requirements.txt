@@ -1,0 +1,54 @@
+# SILVAPURE AI/ML — Python Dependencies
+# Phase 1 (research) requirements
+#
+# Pin versions for reproducibility. Update after testing compatibility.
+# Install: pip install -r requirements.txt
+
+# Core data processing
+pandas>=2.0.0,<3.0.0
+numpy>=1.24.0,<2.0.0
+scipy>=1.10.0,<2.0.0
+
+# Machine learning — tree-based
+scikit-learn>=1.3.0,<2.0.0
+xgboost>=2.0.0,<3.0.0
+lightgbm>=4.0.0,<5.0.0
+catboost>=1.2.0,<2.0.0
+
+# Imbalanced learning
+imbalanced-learn>=0.11.0,<1.0.0
+
+# Deep learning
+torch>=2.0.0,<3.0.0
+pytorch-forecasting>=1.0.0,<2.0.0  # TFT implementation
+
+# Explainability
+shap>=0.43.0,<1.0.0
+lime>=0.2.0.1
+
+# Survival analysis (for RUL estimation alternative)
+lifelines>=0.27.0,<1.0.0
+
+# Statistical time-series baseline
+statsmodels>=0.14.0,<1.0.0
+pmdarima>=2.0.0,<3.0.0  # Auto-ARIMA
+
+# Hyperparameter optimisation
+optuna>=3.4.0,<4.0.0
+
+# Experiment tracking
+mlflow>=2.8.0,<3.0.0
+
+# Visualisation
+matplotlib>=3.7.0,<4.0.0
+seaborn>=0.12.0,<1.0.0
+plotly>=5.17.0,<6.0.0
+
+# Jupyter
+jupyter>=1.0.0
+ipykernel>=6.25.0
+
+# Utilities
+tqdm>=4.65.0,<5.0.0
+requests>=2.31.0,<3.0.0
+python-dotenv>=1.0.0,<2.0.0

@@ -1,0 +1,61 @@
+# Raw dataset files — never commit dataset files
+data/
+
+# Trained model artefacts
+artifacts/**/*
+!artifacts/README.md
+
+# Python
+__pycache__/
+*.py[cod]
+*.egg-info/
+.eggs/
+dist/
+build/
+*.egg
+.Python
+env/
+venv/
+.venv/
+ENV/
+
+# Jupyter
+.ipynb_checkpoints/
+*.ipynb_checkpoints/
+
+# ML experiment tracking
+mlruns/
+mlartifacts/
+wandb/
+.neptune/
+
+# IDEs
+.vscode/
+.idea/
+*.code-workspace
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Secrets and credentials
+.env
+*.pem
+*.key
+credentials.json
+service_account.json
+
+# SWaT and other restricted datasets — do not commit regardless of location
+SWaT*.csv
+SWaT*.xlsx
+SWaT_Dataset*/
+
+# Optuna study databases
+*.db
+optuna_study*.db
+
+# Temporary files
+*.tmp
+*.bak
+.coverage
+coverage.xml
